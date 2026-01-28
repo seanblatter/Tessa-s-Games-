@@ -1,0 +1,478 @@
+/* Global Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    color: #333;
+    touch-action: manipulation;
+}
+
+#app {
+    max-width: 600px;
+    margin: 0 auto;
+    min-height: 100vh;
+    background: white;
+}
+
+.screen {
+    display: none;
+    padding: 20px;
+    min-height: 100vh;
+}
+
+.screen.active {
+    display: block;
+}
+
+/* Header Styles */
+.header {
+    text-align: center;
+    padding: 40px 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 0 0 30px 30px;
+    margin: -20px -20px 30px;
+}
+
+.header h1 {
+    font-size: 2rem;
+    margin-bottom: 10px;
+}
+
+.subtitle {
+    font-size: 1rem;
+    opacity: 0.9;
+}
+
+/* Menu Buttons */
+.menu-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 20px 0;
+}
+
+.game-button {
+    background: white;
+    border: 2px solid #e0e0e0;
+    border-radius: 20px;
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.game-button:active {
+    transform: scale(0.95);
+}
+
+.game-button:hover {
+    border-color: #667eea;
+    box-shadow: 0 6px 12px rgba(102, 126, 234, 0.2);
+}
+
+.game-icon {
+    font-size: 3rem;
+}
+
+.game-name {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #333;
+}
+
+.game-desc {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+/* Game Header */
+.game-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 10px 0;
+}
+
+.game-header h2 {
+    font-size: 1.5rem;
+    color: #667eea;
+}
+
+.back-button, .new-game-button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 10px;
+    background: #667eea;
+    color: white;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.back-button:active, .new-game-button:active {
+    transform: scale(0.95);
+}
+
+/* Wordle Styles */
+#wordle-board {
+    display: grid;
+    gap: 5px;
+    margin: 0 auto 20px;
+    width: fit-content;
+}
+
+.wordle-row {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 5px;
+}
+
+.wordle-tile {
+    width: 60px;
+    height: 60px;
+    border: 2px solid #d3d6da;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    transition: all 0.3s ease;
+}
+
+.wordle-tile.filled {
+    border-color: #878a8c;
+}
+
+.wordle-tile.correct {
+    background: #6aaa64;
+    border-color: #6aaa64;
+    color: white;
+}
+
+.wordle-tile.present {
+    background: #c9b458;
+    border-color: #c9b458;
+    color: white;
+}
+
+.wordle-tile.absent {
+    background: #787c7e;
+    border-color: #787c7e;
+    color: white;
+}
+
+/* Wordle Keyboard */
+#wordle-keyboard {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 20px auto;
+    width: fit-content;
+}
+
+.keyboard-row {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+}
+
+.key {
+    padding: 15px 10px;
+    min-width: 30px;
+    background: #d3d6da;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.2s ease;
+}
+
+.key:active {
+    transform: scale(0.95);
+}
+
+.key.wide {
+    min-width: 60px;
+    font-size: 0.7rem;
+}
+
+.key.correct {
+    background: #6aaa64;
+    color: white;
+}
+
+.key.present {
+    background: #c9b458;
+    color: white;
+}
+
+.key.absent {
+    background: #787c7e;
+    color: white;
+}
+
+/* Sudoku Styles */
+#sudoku-board {
+    display: grid;
+    grid-template-columns: repeat(9, 1fr);
+    gap: 0;
+    margin: 0 auto 20px;
+    width: fit-content;
+    border: 3px solid #333;
+    background: #333;
+}
+
+.sudoku-cell {
+    width: 40px;
+    height: 40px;
+    background: white;
+    border: 1px solid #ccc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.sudoku-cell:nth-child(3n) {
+    border-right: 3px solid #333;
+}
+
+.sudoku-cell:nth-child(n+19):nth-child(-n+27),
+.sudoku-cell:nth-child(n+46):nth-child(-n+54) {
+    border-bottom: 3px solid #333;
+}
+
+.sudoku-cell.fixed {
+    background: #f0f0f0;
+    color: #333;
+    cursor: default;
+}
+
+.sudoku-cell.selected {
+    background: #bbdefb;
+}
+
+.sudoku-cell.error {
+    background: #ffcdd2;
+}
+
+#sudoku-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin: 20px auto;
+    width: fit-content;
+}
+
+#number-pad {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+}
+
+.number-button {
+    width: 60px;
+    height: 60px;
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 1.5rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.number-button:active {
+    transform: scale(0.95);
+}
+
+.control-button {
+    padding: 15px;
+    background: #ff6b6b;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.control-button:active {
+    transform: scale(0.95);
+}
+
+/* Crossword Styles */
+#crossword-game {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+#crossword-board {
+    display: grid;
+    gap: 0;
+    margin: 0 auto;
+    width: fit-content;
+    border: 2px solid #333;
+}
+
+.crossword-cell {
+    width: 35px;
+    height: 35px;
+    border: 1px solid #999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    position: relative;
+    background: white;
+}
+
+.crossword-cell.black {
+    background: #333;
+    border-color: #333;
+}
+
+.crossword-cell.selected {
+    background: #ffffcc;
+}
+
+.crossword-cell.highlight {
+    background: #e3f2fd;
+}
+
+.cell-number {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    font-size: 0.5rem;
+    font-weight: normal;
+}
+
+.crossword-input {
+    width: 100%;
+    height: 100%;
+    border: none;
+    text-align: center;
+    font-size: 1rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    background: transparent;
+}
+
+.crossword-input:focus {
+    outline: none;
+}
+
+#crossword-clues {
+    background: #f5f5f5;
+    padding: 15px;
+    border-radius: 10px;
+}
+
+.clues-section {
+    margin-bottom: 15px;
+}
+
+.clues-section h3 {
+    color: #667eea;
+    margin-bottom: 10px;
+    font-size: 1.1rem;
+}
+
+.clue-item {
+    padding: 10px;
+    margin-bottom: 5px;
+    background: white;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.clue-item:hover {
+    background: #e3f2fd;
+}
+
+.clue-item.active {
+    background: #bbdefb;
+    font-weight: bold;
+}
+
+/* Message Styles */
+.message {
+    text-align: center;
+    padding: 15px;
+    margin: 20px 0;
+    border-radius: 10px;
+    font-weight: bold;
+}
+
+.message.success {
+    background: #c8e6c9;
+    color: #2e7d32;
+}
+
+.message.error {
+    background: #ffcdd2;
+    color: #c62828;
+}
+
+.message.info {
+    background: #bbdefb;
+    color: #1565c0;
+}
+
+/* Responsive Design */
+@media (max-width: 480px) {
+    .wordle-tile {
+        width: 50px;
+        height: 50px;
+        font-size: 1.5rem;
+    }
+    
+    .sudoku-cell {
+        width: 35px;
+        height: 35px;
+        font-size: 1rem;
+    }
+    
+    .crossword-cell {
+        width: 30px;
+        height: 30px;
+        font-size: 0.9rem;
+    }
+    
+    .number-button {
+        width: 50px;
+        height: 50px;
+        font-size: 1.2rem;
+    }
+    
+    .key {
+        padding: 12px 8px;
+        min-width: 25px;
+        font-size: 0.8rem;
+    }
+}

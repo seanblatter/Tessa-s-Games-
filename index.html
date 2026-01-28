@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tessa's Games</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Main Menu -->
+        <div id="menu-screen" class="screen active">
+            <div class="header">
+                <h1>💝 Tessa's Games 💝</h1>
+                <p class="subtitle">Choose your game</p>
+            </div>
+            <div class="menu-buttons">
+                <button class="game-button" onclick="showGame('wordle')">
+                    <span class="game-icon">📝</span>
+                    <span class="game-name">Wordle</span>
+                    <span class="game-desc">Guess the special word</span>
+                </button>
+                <button class="game-button" onclick="showGame('sudoku')">
+                    <span class="game-icon">🔢</span>
+                    <span class="game-name">Sudoku</span>
+                    <span class="game-desc">Classic number puzzle</span>
+                </button>
+                <button class="game-button" onclick="showGame('crossword')">
+                    <span class="game-icon">🔤</span>
+                    <span class="game-name">Crossword</span>
+                    <span class="game-desc">Custom word puzzles</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Wordle Game -->
+        <div id="wordle-screen" class="screen">
+            <div class="game-header">
+                <button class="back-button" onclick="showMenu()">← Back</button>
+                <h2>Wordle</h2>
+                <button class="new-game-button" onclick="newWordleGame()">New Game</button>
+            </div>
+            <div id="wordle-game">
+                <div id="wordle-board"></div>
+                <div id="wordle-keyboard"></div>
+                <div id="wordle-message" class="message"></div>
+            </div>
+        </div>
+
+        <!-- Sudoku Game -->
+        <div id="sudoku-screen" class="screen">
+            <div class="game-header">
+                <button class="back-button" onclick="showMenu()">← Back</button>
+                <h2>Sudoku</h2>
+                <button class="new-game-button" onclick="newSudokuGame()">New Game</button>
+            </div>
+            <div id="sudoku-game">
+                <div id="sudoku-board"></div>
+                <div id="sudoku-controls">
+                    <div id="number-pad"></div>
+                    <button class="control-button" onclick="clearSudokuCell()">Clear</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Crossword Game -->
+        <div id="crossword-screen" class="screen">
+            <div class="game-header">
+                <button class="back-button" onclick="showMenu()">← Back</button>
+                <h2>Crossword</h2>
+                <button class="new-game-button" onclick="newCrosswordGame()">New Game</button>
+            </div>
+            <div id="crossword-game">
+                <div id="crossword-board"></div>
+                <div id="crossword-clues">
+                    <div class="clues-section">
+                        <h3>Across</h3>
+                        <div id="across-clues"></div>
+                    </div>
+                    <div class="clues-section">
+                        <h3>Down</h3>
+                        <div id="down-clues"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="data.js"></script>
+    <script src="wordle.js"></script>
+    <script src="sudoku.js"></script>
+    <script src="crossword.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
