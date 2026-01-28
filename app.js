@@ -16,8 +16,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-window.addEventListener('firebase-ready', () => {
+let firebaseInitialized = false;
+
+function initializeFirebaseServices() {
+    if (firebaseInitialized || !window.firebaseServices) return;
     firebase = window.firebaseServices;
+    firebaseInitialized = true;
+
     firebase.getRedirectResult(firebase.auth)
         .then(async (result) => {
             if (result && result.user) {
@@ -28,6 +33,7 @@ window.addEventListener('firebase-ready', () => {
         .catch((error) => {
             setAuthMessage(formatAuthError(error));
         });
+
     firebase.onAuthStateChanged(firebase.auth, async (user) => {
         currentUser = user;
         if (user) {
@@ -38,7 +44,12 @@ window.addEventListener('firebase-ready', () => {
             showLanding();
         }
     });
-});
+}
+
+window.addEventListener('firebase-ready', initializeFirebaseServices);
+if (window.firebaseServices) {
+    initializeFirebaseServices();
+}
 
 // Screen navigation
 function showLanding() {
