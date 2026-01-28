@@ -1,0 +1,55 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isSelf(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidScoreCreate() {
+      return request.resource.data.keys().hasOnly([
+        'uid',
+        'displayName',
+        'game',
+        'date',
+        'score',
+        'attempts',
+        'durationSeconds',
+        'updatedAt'
+      ])
+      && request.resource.data.uid == request.auth.uid
+      && request.resource.data.game in ['wordle', 'sudoku', 'crossword']
+      && request.resource.data.score is number
+      && request.resource.data.date is string;
+    }
+
+    match /users/{userId} {
+      allow read: if isSelf(userId);
+      allow create: if isSelf(userId)
+        && request.resource.data.keys().hasOnly(['uid', 'email', 'displayName', 'createdAt'])
+        && request.resource.data.uid == request.auth.uid;
+      allow update: if isSelf(userId)
+        && request.resource.data.keys().hasOnly(['uid', 'email', 'displayName', 'createdAt']);
+
+      match /friends/{friendId} {
+        allow read: if isSelf(userId);
+        allow create, update: if isSelf(userId)
+          && request.resource.data.keys().hasOnly(['uid', 'connectedAt'])
+          && request.resource.data.uid == friendId;
+        allow delete: if isSelf(userId);
+      }
+    }
+
+    match /scores/{scoreId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidScoreCreate();
+      allow update: if isSignedIn()
+        && resource.data.uid == request.auth.uid
+        && request.resource.data.uid == request.auth.uid;
+      allow delete: if false;
+    }
+  }
+}

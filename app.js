@@ -36,12 +36,17 @@ function initializeFirebaseServices() {
 
     firebase.onAuthStateChanged(firebase.auth, async (user) => {
         currentUser = user;
-        if (user) {
-            await ensureUserProfile(user);
-            await refreshUserUI();
-            showMenu();
-        } else {
-            showLanding();
+        try {
+            if (user) {
+                await ensureUserProfile(user);
+                await refreshUserUI();
+                showMenu();
+            } else {
+                showLanding();
+            }
+        } catch (error) {
+            setAuthMessage(formatAuthError(error));
+            showAuth('signin');
         }
     });
 }
@@ -229,6 +234,10 @@ function formatAuthError(error) {
             return 'This domain is not authorized for Firebase Authentication. Add it under Authentication > Settings > Authorized domains.';
         case 'auth/configuration-not-found':
             return 'Firebase Auth is not configured correctly. Verify your project settings and that Email/Password sign-in is enabled.';
+        case 'permission-denied':
+            return 'Firestore permissions are blocking access. Update your Firestore rules to allow authenticated users to read/write.';
+        case 'failed-precondition':
+            return 'Firestore is not fully configured. Ensure Firestore is enabled and the rules allow access.';
         case 'auth/popup-blocked':
             return 'Pop-up blocked by the browser. Please allow pop-ups and try again.';
         case 'auth/popup-closed-by-user':
