@@ -13,6 +13,9 @@ function initSudoku() {
 }
 
 function newSudokuGame() {
+    if (window.canPlayDailyGame && !window.canPlayDailyGame('sudoku')) {
+        return;
+    }
     const puzzleData = sudokuPuzzles[Math.floor(Math.random() * sudokuPuzzles.length)];
     
     sudokuState = {
@@ -133,7 +136,7 @@ function checkSudokuComplete() {
     
     if (complete && correct) {
         setTimeout(() => {
-            alert('🎉 Congratulations! You solved the Sudoku puzzle!');
+            showMessage('sudoku', '🎉 Congratulations! You solved the Sudoku puzzle!', 'success');
             if (window.recordScore) {
                 const durationSeconds = Math.round((Date.now() - sudokuState.startTime) / 1000);
                 window.recordScore('sudoku', { durationSeconds });

@@ -18,6 +18,7 @@ service cloud.firestore {
         'score',
         'attempts',
         'durationSeconds',
+        'wordlePattern',
         'updatedAt'
       ])
       && request.resource.data.uid == request.auth.uid
@@ -29,10 +30,10 @@ service cloud.firestore {
     match /users/{userId} {
       allow read: if isSelf(userId);
       allow create: if isSelf(userId)
-        && request.resource.data.keys().hasOnly(['uid', 'email', 'displayName', 'createdAt'])
+        && request.resource.data.keys().hasOnly(['uid', 'email', 'displayName', 'photoURL', 'createdAt'])
         && request.resource.data.uid == request.auth.uid;
       allow update: if isSelf(userId)
-        && request.resource.data.keys().hasOnly(['uid', 'email', 'displayName', 'createdAt']);
+        && request.resource.data.keys().hasOnly(['uid', 'email', 'displayName', 'photoURL', 'createdAt']);
 
       match /friends/{friendId} {
         allow read: if isSelf(userId);

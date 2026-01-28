@@ -4,6 +4,13 @@ let firebase = null;
 let currentUser = null;
 let authMode = 'signin';
 const games = ['wordle', 'sudoku', 'crossword'];
+const gameLabels = {
+    wordle: 'Wordle',
+    sudoku: 'Sudoku',
+    crossword: 'Crossword'
+};
+let dailyScoresCache = {};
+let scoresMode = 'daily';
 
 // Initialize the app
 document.addEventListener('DOMContentLoaded', () => {
@@ -12,7 +19,12 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('auth-form').addEventListener('submit', handleAuthSubmit);
     document.getElementById('google-signin').addEventListener('click', handleGoogleSignIn);
     document.getElementById('scores-game-select').addEventListener('change', (event) => {
-        loadLeaderboards(event.target.value);
+        loadLeaderboards(event.target.value, scoresMode);
+    });
+    document.querySelectorAll('.toggle-button').forEach((button) => {
+        button.addEventListener('click', () => {
+            setScoresMode(button.dataset.mode || 'daily');
+        });
     });
 });
 
@@ -111,7 +123,7 @@ function showTopScores() {
     hideAllScreens();
     document.getElementById('scores-screen').classList.add('active');
     const game = document.getElementById('scores-game-select').value;
-    loadLeaderboards(game);
+    loadLeaderboards(game, scoresMode);
 }
 
 function showConnect() {
@@ -242,6 +254,10 @@ function formatAuthError(error) {
             return 'Pop-up blocked by the browser. Please allow pop-ups and try again.';
         case 'auth/popup-closed-by-user':
             return 'The sign-in pop-up was closed before completing. Please try again.';
+        case 'auth/requires-recent-login':
+            return 'Please sign in again to update your email.';
+        case 'auth/invalid-photo-url':
+            return 'Photo URL is invalid. Use a valid image URL.';
         default:
             return error.message || 'Something went wrong. Please try again.';
     }
@@ -252,11 +268,13 @@ async function ensureUserProfile(user, displayNameOverride) {
     const userRef = firebase.doc(firebase.db, 'users', user.uid);
     const snapshot = await firebase.getDoc(userRef);
     const displayName = displayNameOverride || user.displayName || 'Player';
+    const photoURL = user.photoURL || null;
     if (!snapshot.exists()) {
         await firebase.setDoc(userRef, {
             uid: user.uid,
             email: user.email,
             displayName,
+            photoURL,
             createdAt: firebase.serverTimestamp()
         });
     } else if (displayName && snapshot.data().displayName !== displayName) {
@@ -297,6 +315,26 @@ function getTodayKey() {
     return new Date().toISOString().split('T')[0];
 }
 
+function formatDuration(durationSeconds) {
+    if (!durationSeconds && durationSeconds !== 0) return '—';
+    const minutes = Math.floor(durationSeconds / 60);
+    const seconds = durationSeconds % 60;
+    return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+}
+
+function formatGameLabel(game) {
+    return gameLabels[game] || game;
+}
+
+function setScoresMode(mode) {
+    scoresMode = mode;
+    document.querySelectorAll('.toggle-button').forEach((button) => {
+        button.classList.toggle('active', button.dataset.mode === mode);
+    });
+    const game = document.getElementById('scores-game-select').value;
+    loadLeaderboards(game, scoresMode);
+}
+
 function scoreForGame(game, details) {
     if (game === 'wordle') {
         const attempts = details.attempts || 6;
@@ -319,6 +357,7 @@ async function recordScore(game, details = {}) {
         score,
         attempts: details.attempts || null,
         durationSeconds: details.durationSeconds || null,
+        wordlePattern: details.wordlePattern || null,
         updatedAt: firebase.serverTimestamp()
     }, { merge: true });
     await loadDailyScores();
@@ -335,60 +374,89 @@ async function loadDailyScores() {
     ));
     const scores = {};
     snapshot.forEach((docSnap) => {
-        scores[docSnap.data().game] = docSnap.data().score;
+        scores[docSnap.data().game] = docSnap.data();
     });
+    dailyScoresCache = scores;
     const container = document.getElementById('dropdown-scores');
     container.innerHTML = '';
     games.forEach((game) => {
+        const data = scores[game];
+        const displayValue = (() => {
+            if (!data) return '—';
+            if (game === 'wordle') return data.wordlePattern || '—';
+            if (game === 'sudoku' || game === 'crossword') return formatDuration(data.durationSeconds);
+            return data.score ?? '—';
+        })();
         const row = document.createElement('div');
         row.className = 'score-row';
-        row.innerHTML = `<span>${game}</span><span>${scores[game] ?? '—'}</span>`;
+        row.innerHTML = `<span>${formatGameLabel(game)}</span><span>${displayValue}</span>`;
         container.appendChild(row);
     });
+    updateDailyGameLockUI();
 }
 
-async function loadLeaderboards(game) {
+async function loadLeaderboards(game, mode = 'daily') {
     if (!firebase) return;
     document.getElementById('global-leaderboard').innerHTML = '';
     document.getElementById('friends-leaderboard').innerHTML = '';
 
     const scoresRef = firebase.collection(firebase.db, 'scores');
-    const globalQuery = firebase.query(
-        scoresRef,
-        firebase.where('game', '==', game),
-        firebase.orderBy('score', 'desc'),
-        firebase.limit(10)
-    );
-    const globalSnapshot = await firebase.getDocs(globalQuery);
-    renderLeaderboard('global-leaderboard', globalSnapshot);
+    const globalConstraints = [
+        firebase.where('game', '==', game)
+    ];
+    if (mode === 'daily') {
+        globalConstraints.push(firebase.where('date', '==', getTodayKey()));
+    }
+    globalConstraints.push(firebase.orderBy('score', 'desc'));
+    globalConstraints.push(firebase.limit(30));
+    const globalSnapshot = await firebase.getDocs(firebase.query(scoresRef, ...globalConstraints));
+    renderLeaderboard('global-leaderboard', globalSnapshot, mode);
 
     if (currentUser) {
         const friends = await getFriendIds();
         if (friends.length) {
-            const friendQuery = firebase.query(
-                scoresRef,
+            const friendConstraints = [
                 firebase.where('game', '==', game),
-                firebase.where('uid', 'in', friends.slice(0, 10)),
-                firebase.orderBy('score', 'desc'),
-                firebase.limit(10)
-            );
-            const friendSnapshot = await firebase.getDocs(friendQuery);
-            renderLeaderboard('friends-leaderboard', friendSnapshot);
+                firebase.where('uid', 'in', friends.slice(0, 10))
+            ];
+            if (mode === 'daily') {
+                friendConstraints.push(firebase.where('date', '==', getTodayKey()));
+            }
+            friendConstraints.push(firebase.orderBy('score', 'desc'));
+            friendConstraints.push(firebase.limit(50));
+            const friendSnapshot = await firebase.getDocs(firebase.query(scoresRef, ...friendConstraints));
+            renderLeaderboard('friends-leaderboard', friendSnapshot, mode, true);
         } else {
             document.getElementById('friends-leaderboard').innerHTML = '<li>No friends yet.</li>';
         }
     }
 }
 
-function renderLeaderboard(elementId, snapshot) {
+function renderLeaderboard(elementId, snapshot, mode = 'daily', dedupeByUser = false) {
     const list = document.getElementById(elementId);
     if (snapshot.empty) {
         list.innerHTML = '<li>No scores yet.</li>';
         return;
     }
     list.innerHTML = '';
-    snapshot.forEach((docSnap) => {
-        const data = docSnap.data();
+    const entries = [];
+    snapshot.forEach((docSnap) => entries.push(docSnap.data()));
+
+    let finalEntries = entries;
+    if (dedupeByUser && mode === 'all') {
+        const bestByUser = {};
+        entries.forEach((entry) => {
+            const existing = bestByUser[entry.uid];
+            if (!existing || entry.score > existing.score) {
+                bestByUser[entry.uid] = entry;
+            }
+        });
+        finalEntries = Object.values(bestByUser).sort((a, b) => b.score - a.score).slice(0, 10);
+    } else {
+        finalEntries = entries.slice(0, 10);
+    }
+
+    finalEntries.forEach((data) => {
         const item = document.createElement('li');
         item.textContent = `${data.displayName || data.uid} · ${data.score}`;
         list.appendChild(item);
@@ -401,12 +469,94 @@ async function renderProfile() {
     const userRef = firebase.doc(firebase.db, 'users', currentUser.uid);
     const userSnap = await firebase.getDoc(userRef);
     const data = userSnap.exists() ? userSnap.data() : {};
+    const displayName = data.displayName || currentUser.displayName || 'Player';
+    const email = currentUser.email || '—';
+    const photoURL = data.photoURL || currentUser.photoURL || '';
+    const friendCount = (await getFriendIds()).length;
     profile.innerHTML = `
-        <div class="profile-row"><span>Name</span><strong>${data.displayName || currentUser.displayName || 'Player'}</strong></div>
-        <div class="profile-row"><span>Email</span><strong>${currentUser.email || '—'}</strong></div>
-        <div class="profile-row"><span>Member since</span><strong>${data.createdAt?.toDate?.().toLocaleDateString?.() || 'Today'}</strong></div>
-        <div class="profile-row"><span>Friends</span><strong>${(await getFriendIds()).length}</strong></div>
+        <div class="panel profile-card">
+            <div class="profile-header">
+                <img class="profile-avatar" id="profile-avatar" src="${photoURL || 'https://www.gravatar.com/avatar/?d=mp'}" alt="Profile photo">
+                <div class="profile-meta">
+                    <h3>${displayName}</h3>
+                    <p>${email}</p>
+                    <p>Member since ${data.createdAt?.toDate?.().toLocaleDateString?.() || 'Today'}</p>
+                    <p>${friendCount} friends</p>
+                </div>
+            </div>
+            <div class="profile-form">
+                <label class="form-field">
+                    <span>Display name</span>
+                    <input type="text" id="profile-name" value="${displayName}" placeholder="Tessa">
+                </label>
+                <label class="form-field">
+                    <span>Email</span>
+                    <input type="email" id="profile-email" value="${email}" placeholder="you@example.com">
+                </label>
+                <label class="form-field">
+                    <span>Profile photo URL</span>
+                    <input type="text" id="profile-photo-url" value="${photoURL}" placeholder="https://">
+                </label>
+                <label class="form-field">
+                    <span>Upload photo</span>
+                    <input type="file" id="profile-photo-file" accept="image/*">
+                </label>
+            </div>
+            <div class="profile-actions">
+                <button class="primary-button" type="button" onclick="saveProfileChanges()">Save changes</button>
+                <button class="secondary-button" type="button" onclick="resetProfileForm()">Reset</button>
+            </div>
+            <p class="auth-message" id="profile-message"></p>
+        </div>
     `;
+}
+
+async function getSelectedProfilePhoto() {
+    const fileInput = document.getElementById('profile-photo-file');
+    const urlInput = document.getElementById('profile-photo-url');
+    if (fileInput && fileInput.files && fileInput.files[0]) {
+        const file = fileInput.files[0];
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    }
+    return urlInput ? urlInput.value.trim() : '';
+}
+
+async function saveProfileChanges() {
+    if (!firebase || !currentUser) return;
+    const messageEl = document.getElementById('profile-message');
+    messageEl.textContent = '';
+    const displayName = document.getElementById('profile-name').value.trim();
+    const email = document.getElementById('profile-email').value.trim();
+    try {
+        const photoURL = await getSelectedProfilePhoto();
+        await firebase.updateProfile(currentUser, {
+            displayName: displayName || currentUser.displayName,
+            photoURL: photoURL || currentUser.photoURL
+        });
+        if (email && email !== currentUser.email) {
+            await firebase.updateEmail(currentUser, email);
+        }
+        const userRef = firebase.doc(firebase.db, 'users', currentUser.uid);
+        await firebase.setDoc(userRef, {
+            displayName: displayName || currentUser.displayName || 'Player',
+            email: email || currentUser.email,
+            photoURL: photoURL || currentUser.photoURL || null
+        }, { merge: true });
+        messageEl.textContent = 'Profile updated!';
+        await refreshUserUI();
+        renderProfile();
+    } catch (error) {
+        messageEl.textContent = formatAuthError(error);
+    }
+}
+
+async function resetProfileForm() {
+    await renderProfile();
 }
 
 // Friends and invites
@@ -475,5 +625,23 @@ function clearMessage(game) {
         messageDiv.style.display = 'none';
     }
 }
+
+function updateDailyGameLockUI() {
+    document.querySelectorAll('.new-game-button').forEach((button) => {
+        const game = button.dataset.game;
+        if (!game) return;
+        const alreadyPlayed = Boolean(dailyScoresCache[game]);
+        button.disabled = alreadyPlayed;
+        button.textContent = alreadyPlayed ? 'Played Today' : 'New Game';
+    });
+}
+
+window.canPlayDailyGame = (game) => {
+    if (dailyScoresCache[game]) {
+        showMessage(game, 'You already played today. Come back tomorrow!', 'info');
+        return false;
+    }
+    return true;
+};
 
 window.recordScore = recordScore;

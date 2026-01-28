@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tessa's Games</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.v2.css">
 </head>
 <body>
     <div id="app">
@@ -73,7 +73,13 @@
                     <span class="menu-user-name" id="menu-user-name">Player</span>
                 </div>
                 <div class="menu-actions">
-                    <button class="icon-button" id="menu-dropdown-toggle" aria-haspopup="true" aria-expanded="false">☰</button>
+                    <button class="icon-button" id="menu-dropdown-toggle" aria-haspopup="true" aria-expanded="false" aria-label="Open menu">
+                        <span class="menu-icon" aria-hidden="true">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </span>
+                    </button>
                     <div class="menu-dropdown" id="menu-dropdown" aria-label="Profile menu">
                         <div class="dropdown-section">
                             <h4>Today's scores</h4>
@@ -135,6 +141,10 @@
                         <option value="crossword">Crossword</option>
                     </select>
                 </label>
+                <div class="scores-toggle" role="group" aria-label="Score range">
+                    <button class="toggle-button active" data-mode="daily" type="button">Daily</button>
+                    <button class="toggle-button" data-mode="all" type="button">All Time</button>
+                </div>
             </div>
             <div class="score-columns">
                 <div class="panel">
@@ -179,7 +189,7 @@
             <div class="game-header">
                 <button class="back-button" onclick="showMenu()">← Back</button>
                 <h2>Wordle</h2>
-                <button class="new-game-button" onclick="newWordleGame()">New Game</button>
+                <button class="new-game-button" data-game="wordle" onclick="newWordleGame()">New Game</button>
             </div>
             <div id="wordle-game">
                 <div id="wordle-board"></div>
@@ -193,7 +203,7 @@
             <div class="game-header">
                 <button class="back-button" onclick="showMenu()">← Back</button>
                 <h2>Sudoku</h2>
-                <button class="new-game-button" onclick="newSudokuGame()">New Game</button>
+                <button class="new-game-button" data-game="sudoku" onclick="newSudokuGame()">New Game</button>
             </div>
             <div id="sudoku-game">
                 <div id="sudoku-board"></div>
@@ -201,6 +211,7 @@
                     <div id="number-pad"></div>
                     <button class="control-button" onclick="clearSudokuCell()">Clear</button>
                 </div>
+                <div id="sudoku-message" class="message"></div>
             </div>
         </div>
 
@@ -209,7 +220,7 @@
             <div class="game-header">
                 <button class="back-button" onclick="showMenu()">← Back</button>
                 <h2>Crossword</h2>
-                <button class="new-game-button" onclick="newCrosswordGame()">New Game</button>
+                <button class="new-game-button" data-game="crossword" onclick="newCrosswordGame()">New Game</button>
             </div>
             <div id="crossword-game">
                 <div id="crossword-board"></div>
@@ -223,6 +234,7 @@
                         <div id="down-clues"></div>
                     </div>
                 </div>
+                <div id="crossword-message" class="message"></div>
             </div>
         </div>
     </div>
@@ -245,7 +257,8 @@
         getRedirectResult,
         signOut,
         onAuthStateChanged,
-        updateProfile
+                updateProfile,
+                updateEmail
       } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
       import {
         getFirestore,
@@ -296,6 +309,7 @@
         signOut,
         onAuthStateChanged,
         updateProfile,
+        updateEmail,
         collection,
         doc,
         getDoc,

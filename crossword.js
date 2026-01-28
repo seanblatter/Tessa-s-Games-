@@ -14,6 +14,9 @@ function initCrossword() {
 }
 
 function newCrosswordGame() {
+    if (window.canPlayDailyGame && !window.canPlayDailyGame('crossword')) {
+        return;
+    }
     const puzzle = crosswordPuzzles[Math.floor(Math.random() * crosswordPuzzles.length)];
     
     crosswordState = {
@@ -291,7 +294,7 @@ function checkCrosswordComplete() {
     
     if (complete && correct) {
         setTimeout(() => {
-            alert('🎉 Congratulations! You completed the crossword!');
+            showMessage('crossword', '🎉 Congratulations! You completed the crossword!', 'success');
             if (window.recordScore) {
                 const durationSeconds = Math.round((Date.now() - crosswordState.startTime) / 1000);
                 window.recordScore('crossword', { durationSeconds });

@@ -7,7 +7,8 @@ let wordleState = {
     gameOver: false,
     board: [],
     keyboardState: {},
-    startTime: null
+    startTime: null,
+    lastPattern: ''
 };
 
 function initWordle() {
@@ -16,6 +17,10 @@ function initWordle() {
 }
 
 function newWordleGame() {
+    if (window.canPlayDailyGame && !window.canPlayDailyGame('wordle')) {
+        wordleState.gameOver = true;
+        return;
+    }
     // Reset state
     wordleState = {
         targetWord: wordleWords[Math.floor(Math.random() * wordleWords.length)],
@@ -24,7 +29,8 @@ function newWordleGame() {
         gameOver: false,
         board: Array(6).fill().map(() => Array(5).fill('')),
         keyboardState: {},
-        startTime: Date.now()
+        startTime: Date.now(),
+        lastPattern: ''
     };
     
     createWordleBoard();
@@ -171,6 +177,13 @@ function checkWordleGuess(guess) {
             wordleState.keyboardState[letter] = state;
         }
     });
+
+    const emojiMap = {
+        correct: '🟩',
+        present: '🟨',
+        absent: '⬜'
+    };
+    wordleState.lastPattern = result.map((state) => emojiMap[state] || '⬜').join('');
     
     // Update keyboard
     setTimeout(() => {
@@ -186,7 +199,8 @@ function checkWordleGuess(guess) {
                 const durationSeconds = Math.round((Date.now() - wordleState.startTime) / 1000);
                 window.recordScore('wordle', {
                     attempts: wordleState.currentRow + 1,
-                    durationSeconds
+                    durationSeconds,
+                    wordlePattern: wordleState.lastPattern
                 });
             }
         }, 600);
@@ -194,6 +208,14 @@ function checkWordleGuess(guess) {
         wordleState.gameOver = true;
         setTimeout(() => {
             showMessage('wordle', `Game Over! The word was ${wordleState.targetWord}`, 'error');
+            if (window.recordScore) {
+                const durationSeconds = Math.round((Date.now() - wordleState.startTime) / 1000);
+                window.recordScore('wordle', {
+                    attempts: wordleState.currentRow + 1,
+                    durationSeconds,
+                    wordlePattern: wordleState.lastPattern
+                });
+            }
         }, 600);
     } else {
         wordleState.currentRow++;
