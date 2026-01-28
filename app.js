@@ -212,12 +212,16 @@ function formatAuthError(error) {
             return 'Email/password sign-in is disabled. Enable it in Firebase Authentication settings.';
         case 'auth/api-key-not-valid':
             return 'Firebase API key is invalid or restricted. Check your API key settings.';
+        case 'auth/requests-from-referer-blocked':
+            return 'This domain is blocked for the Firebase API key. Add this site to the API key allowlist in Google Cloud.';
+        case 'auth/unauthorized-domain':
+            return 'This domain is not authorized for Firebase Authentication. Add it under Authentication > Settings > Authorized domains.';
+        case 'auth/configuration-not-found':
+            return 'Firebase Auth is not configured correctly. Verify your project settings and that Email/Password sign-in is enabled.';
         case 'auth/popup-blocked':
             return 'Pop-up blocked by the browser. Please allow pop-ups and try again.';
         case 'auth/popup-closed-by-user':
             return 'The sign-in pop-up was closed before completing. Please try again.';
-        case 'auth/unauthorized-domain':
-            return 'This domain is not authorized for OAuth. Add it in Firebase Authentication settings.';
         default:
             return error.message || 'Something went wrong. Please try again.';
     }
