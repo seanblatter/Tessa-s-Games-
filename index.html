@@ -8,8 +8,84 @@
 </head>
 <body>
     <div id="app">
+        <!-- Landing Page -->
+        <div id="landing-screen" class="screen active">
+            <div class="header">
+                <h1>💝 Tessa's Games 💝</h1>
+                <p class="subtitle">Play, compete, and celebrate every win.</p>
+            </div>
+            <div class="landing-content">
+                <div class="landing-card">
+                    <h2>Daily puzzles made for you</h2>
+                    <p>Jump into Wordle, Sudoku, and Crossword challenges designed for fun, focus, and friendly competition.</p>
+                </div>
+                <div class="landing-card">
+                    <h2>Track your streaks</h2>
+                    <p>We save scores by game and day so you can see your progress, climb the leaderboard, and celebrate wins.</p>
+                </div>
+                <div class="landing-card">
+                    <h2>Play with friends</h2>
+                    <p>Invite friends, build your crew, and compare scores on private friend-only leaderboards.</p>
+                </div>
+                <div class="landing-actions">
+                    <button class="primary-button" onclick="showAuth('signup')">Create Account</button>
+                    <button class="secondary-button" onclick="showAuth('signin')">Sign In</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Auth Screen -->
+        <div id="auth-screen" class="screen">
+            <div class="auth-card">
+                <h2 id="auth-title">Welcome back</h2>
+                <p id="auth-subtitle">Sign in to continue playing.</p>
+                <div class="auth-tabs">
+                    <button class="auth-tab" id="signin-tab" onclick="setAuthMode('signin')">Sign In</button>
+                    <button class="auth-tab" id="signup-tab" onclick="setAuthMode('signup')">Sign Up</button>
+                </div>
+                <form id="auth-form">
+                    <label class="form-field">
+                        <span>Email</span>
+                        <input type="email" id="auth-email" required placeholder="you@example.com">
+                    </label>
+                    <label class="form-field">
+                        <span>Password</span>
+                        <input type="password" id="auth-password" required minlength="6" placeholder="••••••••">
+                    </label>
+                    <label class="form-field" id="auth-name-field">
+                        <span>Display name</span>
+                        <input type="text" id="auth-name" placeholder="Tessa">
+                    </label>
+                    <button type="submit" class="primary-button" id="auth-submit">Sign In</button>
+                </form>
+                <div class="auth-divider"><span>or</span></div>
+                <button class="google-button" id="google-signin">Continue with Google</button>
+                <p class="auth-message" id="auth-message"></p>
+                <button class="text-button" onclick="showLanding()">Back to home</button>
+            </div>
+        </div>
+
         <!-- Main Menu -->
-        <div id="menu-screen" class="screen active">
+        <div id="menu-screen" class="screen">
+            <div class="menu-top-bar">
+                <div class="menu-user">
+                    <span class="menu-greeting">Hi,</span>
+                    <span class="menu-user-name" id="menu-user-name">Player</span>
+                </div>
+                <div class="menu-actions">
+                    <button class="icon-button" id="menu-dropdown-toggle" aria-haspopup="true" aria-expanded="false">☰</button>
+                    <div class="menu-dropdown" id="menu-dropdown" aria-label="Profile menu">
+                        <div class="dropdown-section">
+                            <h4>Today's scores</h4>
+                            <div class="dropdown-scores" id="dropdown-scores"></div>
+                        </div>
+                        <button class="dropdown-item" onclick="showProfile()">Profile</button>
+                        <button class="dropdown-item" onclick="showTopScores()">Top Scores</button>
+                        <button class="dropdown-item" onclick="showConnect()">Connect</button>
+                        <button class="dropdown-item" onclick="signOutUser()">Logout</button>
+                    </div>
+                </div>
+            </div>
             <div class="header">
                 <h1>💝 Tessa's Games 💝</h1>
                 <p class="subtitle">Choose your game</p>
@@ -30,6 +106,71 @@
                     <span class="game-name">Crossword</span>
                     <span class="game-desc">Custom word puzzles</span>
                 </button>
+            </div>
+        </div>
+
+        <!-- Profile Screen -->
+        <div id="profile-screen" class="screen">
+            <div class="game-header">
+                <button class="back-button" onclick="showMenu()">← Back</button>
+                <h2>Profile</h2>
+                <div></div>
+            </div>
+            <div class="panel" id="profile-details"></div>
+        </div>
+
+        <!-- Top Scores Screen -->
+        <div id="scores-screen" class="screen">
+            <div class="game-header">
+                <button class="back-button" onclick="showMenu()">← Back</button>
+                <h2>Top Scores</h2>
+                <div></div>
+            </div>
+            <div class="panel">
+                <label class="form-field">
+                    <span>Game</span>
+                    <select id="scores-game-select">
+                        <option value="wordle">Wordle</option>
+                        <option value="sudoku">Sudoku</option>
+                        <option value="crossword">Crossword</option>
+                    </select>
+                </label>
+            </div>
+            <div class="score-columns">
+                <div class="panel">
+                    <h3>Global Leaderboard</h3>
+                    <ol id="global-leaderboard" class="leaderboard"></ol>
+                </div>
+                <div class="panel">
+                    <h3>Friends Leaderboard</h3>
+                    <ol id="friends-leaderboard" class="leaderboard"></ol>
+                </div>
+            </div>
+        </div>
+
+        <!-- Connect Screen -->
+        <div id="connect-screen" class="screen">
+            <div class="game-header">
+                <button class="back-button" onclick="showMenu()">← Back</button>
+                <h2>Connect</h2>
+                <div></div>
+            </div>
+            <div class="panel">
+                <h3>Invite friends</h3>
+                <p>Share your invite link so friends can join your leaderboard.</p>
+                <div class="invite-row">
+                    <input type="text" id="invite-link" readonly>
+                    <button class="secondary-button" onclick="copyInviteLink()">Copy</button>
+                </div>
+            </div>
+            <div class="panel">
+                <h3>Accept an invite</h3>
+                <p>Paste a friend code to connect with them.</p>
+                <div class="invite-row">
+                    <input type="text" id="invite-code" placeholder="Friend UID">
+                    <button class="primary-button" onclick="acceptInvite()">Connect</button>
+                </div>
+                <p class="auth-message" id="connect-message"></p>
             </div>
         </div>
 
@@ -90,6 +231,81 @@
     <script src="wordle.js"></script>
     <script src="sudoku.js"></script>
     <script src="crossword.js"></script>
+    <script type="module">
+      // Import the functions you need from the SDKs you need
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
+      import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-analytics.js";
+      import {
+        getAuth,
+        createUserWithEmailAndPassword,
+        signInWithEmailAndPassword,
+        GoogleAuthProvider,
+        signInWithPopup,
+        signOut,
+        onAuthStateChanged,
+        updateProfile
+      } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
+      import {
+        getFirestore,
+        collection,
+        doc,
+        getDoc,
+        getDocs,
+        query,
+        setDoc,
+        serverTimestamp,
+        where,
+        orderBy,
+        limit
+      } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
+      // TODO: Add SDKs for Firebase products that you want to use
+      // https://firebase.google.com/docs/web/setup#available-libraries
+
+      // Your web app's Firebase configuration
+      // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+      const firebaseConfig = {
+        apiKey: "AIzaSyAOWp_TXYvbwKouGFcSx_gbRvUVYMZqyBU",
+        authDomain: "tessa-s-games.firebaseapp.com",
+        projectId: "tessa-s-games",
+        storageBucket: "tessa-s-games.firebasestorage.app",
+        messagingSenderId: "69785654149",
+        appId: "1:69785654149:web:3f089316c5df2830feaaec",
+        measurementId: "G-H8TFWYLSHP"
+      };
+
+      // Initialize Firebase
+      const app = initializeApp(firebaseConfig);
+      const analytics = getAnalytics(app);
+      const auth = getAuth(app);
+      const db = getFirestore(app);
+      const provider = new GoogleAuthProvider();
+
+      window.firebaseServices = {
+        app,
+        analytics,
+        auth,
+        db,
+        provider,
+        createUserWithEmailAndPassword,
+        signInWithEmailAndPassword,
+        signInWithPopup,
+        signOut,
+        onAuthStateChanged,
+        updateProfile,
+        collection,
+        doc,
+        getDoc,
+        getDocs,
+        query,
+        setDoc,
+        serverTimestamp,
+        where,
+        orderBy,
+        limit
+      };
+
+      window.dispatchEvent(new Event('firebase-ready'));
+    </script>
     <script src="app.js"></script>
 </body>
 </html>

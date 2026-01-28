@@ -5,7 +5,8 @@ let crosswordState = {
     board: [],
     selectedCell: null,
     direction: 'across',
-    currentClue: null
+    currentClue: null,
+    startTime: null
 };
 
 function initCrossword() {
@@ -20,7 +21,8 @@ function newCrosswordGame() {
         board: puzzle.grid.map(row => row.map(cell => cell === '#' ? '#' : '')),
         selectedCell: null,
         direction: 'across',
-        currentClue: null
+        currentClue: null,
+        startTime: Date.now()
     };
     
     createCrosswordBoard();
@@ -290,6 +292,10 @@ function checkCrosswordComplete() {
     if (complete && correct) {
         setTimeout(() => {
             alert('🎉 Congratulations! You completed the crossword!');
+            if (window.recordScore) {
+                const durationSeconds = Math.round((Date.now() - crosswordState.startTime) / 1000);
+                window.recordScore('crossword', { durationSeconds });
+            }
         }, 100);
     }
 }
