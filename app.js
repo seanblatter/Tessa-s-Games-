@@ -535,10 +535,6 @@ async function renderProfile() {
                     <input type="email" id="profile-email" value="${email}" placeholder="you@example.com">
                 </label>
                 <label class="form-field">
-                    <span>Profile photo URL</span>
-                    <input type="text" id="profile-photo-url" value="${photoURL}" placeholder="https://">
-                </label>
-                <label class="form-field">
                     <span>Upload photo</span>
                     <input type="file" id="profile-photo-file" accept="image/*">
                 </label>
@@ -554,9 +550,12 @@ async function renderProfile() {
 
 async function getSelectedProfilePhoto() {
     const fileInput = document.getElementById('profile-photo-file');
-    const urlInput = document.getElementById('profile-photo-url');
     if (fileInput && fileInput.files && fileInput.files[0]) {
         const file = fileInput.files[0];
+        const maxSizeBytes = 900 * 1024;
+        if (file.size > maxSizeBytes) {
+            throw new Error('Photo is too large. Please upload an image under 900KB.');
+        }
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.onload = () => resolve(reader.result);
@@ -564,7 +563,7 @@ async function getSelectedProfilePhoto() {
             reader.readAsDataURL(file);
         });
     }
-    return urlInput ? urlInput.value.trim() : '';
+    return '';
 }
 
 async function saveProfileChanges() {
@@ -575,9 +574,9 @@ async function saveProfileChanges() {
     const email = document.getElementById('profile-email').value.trim();
     try {
         const photoURL = await getSelectedProfilePhoto();
+        const nextPhotoURL = photoURL || currentUser.photoURL;
         await firebase.updateProfile(currentUser, {
-            displayName: displayName || currentUser.displayName,
-            photoURL: photoURL || currentUser.photoURL
+            displayName: displayName || currentUser.displayName
         });
         if (email && email !== currentUser.email) {
             await firebase.updateEmail(currentUser, email);
@@ -586,7 +585,7 @@ async function saveProfileChanges() {
         await firebase.setDoc(userRef, {
             displayName: displayName || currentUser.displayName || 'Player',
             email: email || currentUser.email,
-            photoURL: photoURL || currentUser.photoURL || null
+            photoURL: nextPhotoURL || null
         }, { merge: true });
         const updatedSnap = await firebase.getDoc(userRef);
         const updatedData = updatedSnap.exists() ? updatedSnap.data() : {};

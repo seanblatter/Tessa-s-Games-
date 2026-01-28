@@ -489,6 +489,15 @@ body {
     gap: 14px;
 }
 
+.profile-form .form-field input {
+    width: 100%;
+    max-width: 100%;
+}
+
+.profile-card {
+    overflow: hidden;
+}
+
 .profile-actions {
     display: flex;
     gap: 12px;
