@@ -30,10 +30,10 @@ service cloud.firestore {
     match /users/{userId} {
       allow read: if isSelf(userId);
       allow create: if isSelf(userId)
-        && request.resource.data.keys().hasOnly(['uid', 'email', 'displayName', 'photoURL', 'createdAt'])
+        && request.resource.data.keys().hasOnly(['uid', 'email', 'displayName', 'photoURL', 'friendTag', 'createdAt'])
         && request.resource.data.uid == request.auth.uid;
       allow update: if isSelf(userId)
-        && request.resource.data.keys().hasOnly(['uid', 'email', 'displayName', 'photoURL', 'createdAt']);
+        && request.resource.data.keys().hasOnly(['uid', 'email', 'displayName', 'photoURL', 'friendTag', 'createdAt']);
 
       match /friends/{friendId} {
         allow read: if isSelf(userId);
@@ -42,6 +42,21 @@ service cloud.firestore {
           && request.resource.data.uid == friendId;
         allow delete: if isSelf(userId);
       }
+
+      match /requests/{requestId} {
+        allow read: if isSelf(userId);
+        allow create: if isSignedIn()
+          && request.resource.data.keys().hasOnly(['fromUid', 'fromName', 'fromTag', 'fromPhotoURL', 'createdAt'])
+          && request.resource.data.fromUid == request.auth.uid;
+        allow delete: if isSelf(userId);
+      }
+    }
+
+    match /publicProfiles/{userId} {
+      allow read: if isSignedIn();
+      allow create, update: if isSelf(userId)
+        && request.resource.data.keys().hasOnly(['uid', 'displayName', 'photoURL', 'friendTag'])
+        && request.resource.data.uid == request.auth.uid;
     }
 
     match /scores/{scoreId} {

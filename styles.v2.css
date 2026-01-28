@@ -555,6 +555,65 @@ body {
     padding: 12px;
 }
 
+#friend-tag {
+    font-weight: 700;
+    color: #5a4400;
+    background: linear-gradient(135deg, #fff2c2, #ffe7a7);
+    border: 1px solid rgba(217, 164, 65, 0.5);
+}
+
+.request-list {
+    display: grid;
+    gap: 12px;
+}
+
+.request-empty {
+    color: var(--muted);
+    font-weight: 600;
+}
+
+.request-card {
+    display: grid;
+    grid-template-columns: 48px 1fr auto;
+    align-items: center;
+    gap: 12px;
+    background: white;
+    border-radius: 14px;
+    padding: 12px;
+    border: 1px solid rgba(92, 108, 255, 0.12);
+    box-shadow: 0 8px 16px rgba(31, 36, 48, 0.08);
+}
+
+.request-card img {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(92, 108, 255, 0.2);
+}
+
+.request-card strong {
+    display: block;
+    color: var(--text);
+}
+
+.request-card span {
+    display: block;
+    color: var(--muted);
+    font-size: 0.85rem;
+}
+
+.request-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.request-actions .primary-button,
+.request-actions .secondary-button {
+    padding: 8px 12px;
+    font-size: 0.85rem;
+}
+
 /* Wordle Styles */
 #wordle-board {
     display: grid;
@@ -657,6 +716,30 @@ body {
 }
 
 /* Sudoku Styles */
+.sudoku-settings {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 12px;
+}
+
+.toggle-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    color: var(--muted);
+    background: var(--surface-alt);
+    border: 1px solid rgba(92, 108, 255, 0.12);
+    padding: 8px 14px;
+    border-radius: 999px;
+}
+
+.toggle-row input {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--primary);
+}
+
 #sudoku-board {
     display: grid;
     grid-template-columns: repeat(9, 1fr);

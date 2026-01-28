@@ -5,10 +5,12 @@ let sudokuState = {
     solution: [],
     board: [],
     selectedCell: null,
-    startTime: null
+    startTime: null,
+    autoCheck: true
 };
 
 function initSudoku() {
+    setupAutoCheckToggle();
     newSudokuGame();
 }
 
@@ -17,17 +19,53 @@ function newSudokuGame() {
         return;
     }
     const puzzleData = sudokuPuzzles[Math.floor(Math.random() * sudokuPuzzles.length)];
+    const autoCheck = getAutoCheckValue();
     
     sudokuState = {
         puzzle: JSON.parse(JSON.stringify(puzzleData.puzzle)),
         solution: JSON.parse(JSON.stringify(puzzleData.solution)),
         board: JSON.parse(JSON.stringify(puzzleData.puzzle)),
         selectedCell: null,
-        startTime: Date.now()
+        startTime: Date.now(),
+        autoCheck
     };
     
     createSudokuBoard();
     createNumberPad();
+    applyAutoCheckToBoard();
+}
+
+function setupAutoCheckToggle() {
+    const toggle = document.getElementById('sudoku-autocheck');
+    if (!toggle || toggle.dataset.ready) return;
+    toggle.dataset.ready = 'true';
+    toggle.addEventListener('change', () => {
+        sudokuState.autoCheck = toggle.checked;
+        applyAutoCheckToBoard();
+    });
+}
+
+function getAutoCheckValue() {
+    const toggle = document.getElementById('sudoku-autocheck');
+    return toggle ? toggle.checked : true;
+}
+
+function applyAutoCheckToBoard() {
+    const cells = document.querySelectorAll('.sudoku-cell');
+    cells.forEach((cell) => {
+        const row = Number(cell.dataset.row);
+        const col = Number(cell.dataset.col);
+        const value = sudokuState.board[row]?.[col] || 0;
+        if (!value) {
+            cell.classList.remove('error');
+            return;
+        }
+        if (sudokuState.autoCheck && value !== sudokuState.solution[row][col]) {
+            cell.classList.add('error');
+        } else {
+            cell.classList.remove('error');
+        }
+    });
 }
 
 function createSudokuBoard() {
@@ -98,11 +136,16 @@ function enterSudokuNumber(num) {
     cell.textContent = num;
     
     // Check if correct
-    if (num === sudokuState.solution[row][col]) {
+    if (sudokuState.autoCheck) {
+        if (num === sudokuState.solution[row][col]) {
+            cell.classList.remove('error');
+            checkSudokuComplete();
+        } else {
+            cell.classList.add('error');
+        }
+    } else {
         cell.classList.remove('error');
         checkSudokuComplete();
-    } else {
-        cell.classList.add('error');
     }
 }
 

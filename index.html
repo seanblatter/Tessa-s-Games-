@@ -166,6 +166,14 @@
                 <div></div>
             </div>
             <div class="panel">
+                <h3>Your friend tag</h3>
+                <p>Share this tag to invite friends.</p>
+                <div class="invite-row">
+                    <input type="text" id="friend-tag" readonly>
+                    <button class="secondary-button" onclick="copyFriendTag()">Copy</button>
+                </div>
+            </div>
+            <div class="panel">
                 <h3>Invite friends</h3>
                 <p>Share your invite link so friends can join your leaderboard.</p>
                 <div class="invite-row">
@@ -175,12 +183,16 @@
             </div>
             <div class="panel">
                 <h3>Accept an invite</h3>
-                <p>Paste a friend code to connect with them.</p>
+                <p>Paste a friend tag to connect with them.</p>
                 <div class="invite-row">
-                    <input type="text" id="invite-code" placeholder="Friend UID">
-                    <button class="primary-button" onclick="acceptInvite()">Connect</button>
+                    <input type="text" id="invite-code" placeholder="🥬123456789">
+                    <button class="primary-button" onclick="acceptInvite()">Send Request</button>
                 </div>
                 <p class="auth-message" id="connect-message"></p>
+            </div>
+            <div class="panel">
+                <h3>Friend requests</h3>
+                <div id="friend-requests" class="request-list"></div>
             </div>
         </div>
 
@@ -206,6 +218,12 @@
                 <button class="new-game-button" data-game="sudoku" onclick="newSudokuGame()">New Game</button>
             </div>
             <div id="sudoku-game">
+                <div class="sudoku-settings">
+                    <label class="toggle-row">
+                        <input type="checkbox" id="sudoku-autocheck" checked>
+                        <span>Auto-check</span>
+                    </label>
+                </div>
                 <div id="sudoku-board"></div>
                 <div id="sudoku-controls">
                     <div id="number-pad"></div>
@@ -268,6 +286,7 @@
         getDocs,
         query,
         setDoc,
+        deleteDoc,
         serverTimestamp,
         where,
         orderBy,
@@ -316,6 +335,7 @@
         getDocs,
         query,
         setDoc,
+        deleteDoc,
         serverTimestamp,
         where,
         orderBy,

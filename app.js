@@ -11,10 +11,19 @@ const gameLabels = {
 };
 let dailyScoresCache = {};
 let scoresMode = 'daily';
+let pendingInviteUid = null;
+
+function getInviteParam() {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('invite');
+}
 
 // Initialize the app
 document.addEventListener('DOMContentLoaded', () => {
     showLanding();
+    if (getInviteParam()) {
+        showAuth('signup');
+    }
     setupMenuDropdown();
     document.getElementById('auth-form').addEventListener('submit', handleAuthSubmit);
     document.getElementById('google-signin').addEventListener('click', handleGoogleSignIn);
@@ -52,6 +61,7 @@ function initializeFirebaseServices() {
             if (user) {
                 await ensureUserProfile(user);
                 await refreshUserUI();
+                await handleInviteLink(user);
                 showMenu();
             } else {
                 showLanding();
@@ -131,6 +141,7 @@ function showConnect() {
     document.getElementById('connect-screen').classList.add('active');
     renderInviteLink();
     document.getElementById('connect-message').textContent = '';
+    renderFriendRequests();
 }
 
 function showGame(gameName) {
@@ -269,17 +280,47 @@ async function ensureUserProfile(user, displayNameOverride) {
     const snapshot = await firebase.getDoc(userRef);
     const displayName = displayNameOverride || user.displayName || 'Player';
     const photoURL = user.photoURL || null;
+    let friendTag = snapshot.exists() ? snapshot.data().friendTag : null;
+    if (!friendTag) {
+        friendTag = await generateFriendTag();
+    }
     if (!snapshot.exists()) {
         await firebase.setDoc(userRef, {
             uid: user.uid,
             email: user.email,
             displayName,
             photoURL,
+            friendTag,
             createdAt: firebase.serverTimestamp()
         });
     } else if (displayName && snapshot.data().displayName !== displayName) {
         await firebase.setDoc(userRef, { displayName }, { merge: true });
     }
+    if (snapshot.exists() && !snapshot.data().friendTag) {
+        await firebase.setDoc(userRef, { friendTag }, { merge: true });
+    }
+    await ensurePublicProfile({
+        uid: user.uid,
+        displayName,
+        photoURL,
+        friendTag
+    });
+}
+
+async function ensurePublicProfile({ uid, displayName, photoURL, friendTag }) {
+    if (!firebase || !uid) return;
+    const publicRef = firebase.doc(firebase.db, 'publicProfiles', uid);
+    await firebase.setDoc(publicRef, {
+        uid,
+        displayName: displayName || 'Player',
+        photoURL: photoURL || null,
+        friendTag
+    }, { merge: true });
+}
+
+async function generateFriendTag() {
+    const tagId = Math.floor(100000000 + Math.random() * 900000000);
+    return `🥬${tagId}`;
 }
 
 async function refreshUserUI() {
@@ -547,6 +588,14 @@ async function saveProfileChanges() {
             email: email || currentUser.email,
             photoURL: photoURL || currentUser.photoURL || null
         }, { merge: true });
+        const updatedSnap = await firebase.getDoc(userRef);
+        const updatedData = updatedSnap.exists() ? updatedSnap.data() : {};
+        await ensurePublicProfile({
+            uid: currentUser.uid,
+            displayName: displayName || currentUser.displayName || 'Player',
+            photoURL: photoURL || currentUser.photoURL || null,
+            friendTag: updatedData.friendTag || null
+        });
         messageEl.textContent = 'Profile updated!';
         await refreshUserUI();
         renderProfile();
@@ -564,10 +613,12 @@ async function renderInviteLink() {
     if (!currentUser) return;
     const link = `${window.location.origin}${window.location.pathname}?invite=${currentUser.uid}`;
     document.getElementById('invite-link').value = link;
-    const params = new URLSearchParams(window.location.search);
-    const invite = params.get('invite');
-    if (invite) {
-        document.getElementById('invite-code').value = invite;
+    const userRef = firebase.doc(firebase.db, 'users', currentUser.uid);
+    const userSnap = await firebase.getDoc(userRef);
+    const tag = userSnap.exists() ? userSnap.data().friendTag : '';
+    const friendTagInput = document.getElementById('friend-tag');
+    if (friendTagInput) {
+        friendTagInput.value = tag || '';
     }
 }
 
@@ -577,22 +628,116 @@ async function copyInviteLink() {
     document.execCommand('copy');
 }
 
+async function copyFriendTag() {
+    const input = document.getElementById('friend-tag');
+    if (!input) return;
+    input.select();
+    document.execCommand('copy');
+}
+
+async function handleInviteLink(user) {
+    if (!firebase || !user) return;
+    if (!pendingInviteUid) {
+        pendingInviteUid = getInviteParam();
+    }
+    if (!pendingInviteUid || pendingInviteUid === user.uid) return;
+    await addFriendConnection(user.uid, pendingInviteUid);
+    await addFriendConnection(pendingInviteUid, user.uid);
+    pendingInviteUid = null;
+    if (window.history && window.history.replaceState) {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('invite');
+        window.history.replaceState({}, document.title, url.toString());
+    }
+}
+
 async function acceptInvite() {
     if (!firebase || !currentUser) return;
-    const friendId = document.getElementById('invite-code').value.trim();
+    const friendTag = document.getElementById('invite-code').value.trim();
     const messageEl = document.getElementById('connect-message');
-    if (!friendId || friendId === currentUser.uid) {
-        messageEl.textContent = 'Enter a valid friend code.';
+    if (!friendTag || !friendTag.startsWith('🥬')) {
+        messageEl.textContent = 'Enter a valid friend tag.';
         return;
     }
-    await addFriendConnection(currentUser.uid, friendId);
-    await addFriendConnection(friendId, currentUser.uid);
-    messageEl.textContent = 'Friend connection saved!';
+    const profileSnapshot = await firebase.getDocs(firebase.query(
+        firebase.collection(firebase.db, 'publicProfiles'),
+        firebase.where('friendTag', '==', friendTag)
+    ));
+    if (profileSnapshot.empty) {
+        messageEl.textContent = 'No user found with that friend tag.';
+        return;
+    }
+    const target = profileSnapshot.docs[0].data();
+    if (!target || target.uid === currentUser.uid) {
+        messageEl.textContent = 'That friend tag belongs to you.';
+        return;
+    }
+    await sendFriendRequest(target);
+    messageEl.textContent = 'Friend request sent!';
+    document.getElementById('invite-code').value = '';
 }
 
 async function addFriendConnection(ownerId, friendId) {
     const friendRef = firebase.doc(firebase.db, 'users', ownerId, 'friends', friendId);
     await firebase.setDoc(friendRef, { uid: friendId, connectedAt: firebase.serverTimestamp() });
+}
+
+async function sendFriendRequest(target) {
+    const currentUserRef = firebase.doc(firebase.db, 'users', currentUser.uid);
+    const userSnap = await firebase.getDoc(currentUserRef);
+    const currentTag = userSnap.exists() ? userSnap.data().friendTag : null;
+    const requestRef = firebase.doc(firebase.db, 'users', target.uid, 'requests', currentUser.uid);
+    await firebase.setDoc(requestRef, {
+        fromUid: currentUser.uid,
+        fromName: currentUser.displayName || 'Player',
+        fromTag: currentTag || null,
+        fromPhotoURL: currentUser.photoURL || null,
+        createdAt: firebase.serverTimestamp()
+    });
+}
+
+async function renderFriendRequests() {
+    if (!firebase || !currentUser) return;
+    const list = document.getElementById('friend-requests');
+    if (!list) return;
+    list.innerHTML = '';
+    const requestsRef = firebase.collection(firebase.db, 'users', currentUser.uid, 'requests');
+    const snapshot = await firebase.getDocs(firebase.query(
+        requestsRef,
+        firebase.orderBy('createdAt', 'desc')
+    ));
+    if (snapshot.empty) {
+        list.innerHTML = '<p class="request-empty">No requests yet.</p>';
+        return;
+    }
+    snapshot.forEach((docSnap) => {
+        const request = docSnap.data();
+        const item = document.createElement('div');
+        item.className = 'request-card';
+        item.innerHTML = `
+            <img src="${request.fromPhotoURL || 'https://www.gravatar.com/avatar/?d=mp'}" alt="${request.fromName}">
+            <div>
+                <strong>${request.fromName || 'Player'}</strong>
+                <span>${request.fromTag || ''}</span>
+            </div>
+            <div class="request-actions">
+                <button class="primary-button" type="button">Accept</button>
+                <button class="secondary-button" type="button">Decline</button>
+            </div>
+        `;
+        const [acceptBtn, declineBtn] = item.querySelectorAll('button');
+        acceptBtn.addEventListener('click', async () => {
+            await addFriendConnection(currentUser.uid, request.fromUid);
+            await addFriendConnection(request.fromUid, currentUser.uid);
+            await firebase.deleteDoc(firebase.doc(firebase.db, 'users', currentUser.uid, 'requests', docSnap.id));
+            renderFriendRequests();
+        });
+        declineBtn.addEventListener('click', async () => {
+            await firebase.deleteDoc(firebase.doc(firebase.db, 'users', currentUser.uid, 'requests', docSnap.id));
+            renderFriendRequests();
+        });
+        list.appendChild(item);
+    });
 }
 
 async function getFriendIds() {
