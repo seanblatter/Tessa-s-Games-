@@ -4,7 +4,8 @@ let sudokuState = {
     puzzle: [],
     solution: [],
     board: [],
-    selectedCell: null
+    selectedCell: null,
+    startTime: null
 };
 
 function initSudoku() {
@@ -18,7 +19,8 @@ function newSudokuGame() {
         puzzle: JSON.parse(JSON.stringify(puzzleData.puzzle)),
         solution: JSON.parse(JSON.stringify(puzzleData.solution)),
         board: JSON.parse(JSON.stringify(puzzleData.puzzle)),
-        selectedCell: null
+        selectedCell: null,
+        startTime: Date.now()
     };
     
     createSudokuBoard();
@@ -132,6 +134,10 @@ function checkSudokuComplete() {
     if (complete && correct) {
         setTimeout(() => {
             alert('🎉 Congratulations! You solved the Sudoku puzzle!');
+            if (window.recordScore) {
+                const durationSeconds = Math.round((Date.now() - sudokuState.startTime) / 1000);
+                window.recordScore('sudoku', { durationSeconds });
+            }
         }, 100);
     }
 }

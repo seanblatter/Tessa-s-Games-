@@ -6,7 +6,8 @@ let wordleState = {
     currentTile: 0,
     gameOver: false,
     board: [],
-    keyboardState: {}
+    keyboardState: {},
+    startTime: null
 };
 
 function initWordle() {
@@ -22,7 +23,8 @@ function newWordleGame() {
         currentTile: 0,
         gameOver: false,
         board: Array(6).fill().map(() => Array(5).fill('')),
-        keyboardState: {}
+        keyboardState: {},
+        startTime: Date.now()
     };
     
     createWordleBoard();
@@ -180,6 +182,13 @@ function checkWordleGuess(guess) {
         wordleState.gameOver = true;
         setTimeout(() => {
             showMessage('wordle', '🎉 Congratulations! You found the word!', 'success');
+            if (window.recordScore) {
+                const durationSeconds = Math.round((Date.now() - wordleState.startTime) / 1000);
+                window.recordScore('wordle', {
+                    attempts: wordleState.currentRow + 1,
+                    durationSeconds
+                });
+            }
         }, 600);
     } else if (wordleState.currentRow === 5) {
         wordleState.gameOver = true;
