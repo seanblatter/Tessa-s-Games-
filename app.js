@@ -18,6 +18,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
 window.addEventListener('firebase-ready', () => {
     firebase = window.firebaseServices;
+    firebase.getRedirectResult(firebase.auth)
+        .then(async (result) => {
+            if (result && result.user) {
+                await ensureUserProfile(result.user);
+                clearAuthMessage();
+            }
+        })
+        .catch((error) => {
+            setAuthMessage(formatAuthError(error));
+        });
     firebase.onAuthStateChanged(firebase.auth, async (user) => {
         currentUser = user;
         if (user) {
@@ -141,7 +151,10 @@ async function handleAuthSubmit(event) {
         }
         clearAuthMessage();
     } catch (error) {
-        setAuthMessage(error.message);
+        setAuthMessage(formatAuthError(error));
+        if (error.code === 'auth/email-already-in-use' && authMode === 'signup') {
+            setAuthMode('signin');
+        }
     }
 }
 
@@ -152,7 +165,16 @@ async function handleGoogleSignIn() {
         await ensureUserProfile(result.user);
         clearAuthMessage();
     } catch (error) {
-        setAuthMessage(error.message);
+        if (error.code === 'auth/popup-blocked' || error.code === 'auth/popup-closed-by-user') {
+            setAuthMessage('Pop-up blocked. Redirecting to Google sign-in...');
+            await firebase.signInWithRedirect(firebase.auth, firebase.provider);
+            return;
+        }
+        if (error.code === 'auth/unauthorized-domain') {
+            setAuthMessage('This domain is not authorized for Google sign-in. Add it in Firebase Authentication settings.');
+            return;
+        }
+        setAuthMessage(formatAuthError(error));
     }
 }
 
@@ -170,6 +192,35 @@ function setAuthMessage(message) {
 
 function clearAuthMessage() {
     setAuthMessage('');
+}
+
+function formatAuthError(error) {
+    if (!error) return 'Something went wrong. Please try again.';
+    const code = error.code || '';
+    switch (code) {
+        case 'auth/email-already-in-use':
+            return 'That email is already registered. Try signing in instead.';
+        case 'auth/wrong-password':
+            return 'Incorrect password. Please try again.';
+        case 'auth/user-not-found':
+            return 'No account found for that email. Try signing up.';
+        case 'auth/invalid-email':
+            return 'Please enter a valid email address.';
+        case 'auth/weak-password':
+            return 'Password is too weak. Use at least 6 characters.';
+        case 'auth/operation-not-allowed':
+            return 'Email/password sign-in is disabled. Enable it in Firebase Authentication settings.';
+        case 'auth/api-key-not-valid':
+            return 'Firebase API key is invalid or restricted. Check your API key settings.';
+        case 'auth/popup-blocked':
+            return 'Pop-up blocked by the browser. Please allow pop-ups and try again.';
+        case 'auth/popup-closed-by-user':
+            return 'The sign-in pop-up was closed before completing. Please try again.';
+        case 'auth/unauthorized-domain':
+            return 'This domain is not authorized for OAuth. Add it in Firebase Authentication settings.';
+        default:
+            return error.message || 'Something went wrong. Please try again.';
+    }
 }
 
 async function ensureUserProfile(user, displayNameOverride) {
