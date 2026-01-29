@@ -892,16 +892,18 @@ body {
 
 #crossword-board {
     display: grid;
-    gap: 0;
+    gap: 1px;
     margin: 0 auto;
     width: fit-content;
-    border: 2px solid #333;
+    border: 3px solid #1f2430;
+    background: #1f2430;
+    box-shadow: 0 12px 28px rgba(31, 36, 48, 0.18);
 }
 
 .crossword-cell {
     width: var(--cell-size, 28px);
     height: var(--cell-size, 28px);
-    border: 1px solid #999;
+    border: none;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -909,20 +911,19 @@ body {
     font-weight: bold;
     text-transform: uppercase;
     position: relative;
-    background: white;
+    background: #ffffff;
 }
 
 .crossword-cell.black {
-    background: #333;
-    border-color: #333;
+    background: #1f2430;
 }
 
 .crossword-cell.selected {
-    background: #ffffcc;
+    background: #fff4c2;
 }
 
 .crossword-cell.highlight {
-    background: #e3f2fd;
+    background: #e9eeff;
 }
 
 .cell-number {
@@ -931,6 +932,7 @@ body {
     left: 2px;
     font-size: calc(var(--cell-size, 28px) * 0.25);
     font-weight: normal;
+    color: #506080;
 }
 
 .crossword-input {
@@ -942,6 +944,7 @@ body {
     font-weight: bold;
     text-transform: uppercase;
     background: transparent;
+    color: #1f2430;
 }
 
 .crossword-input:focus {
