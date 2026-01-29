@@ -13,6 +13,7 @@ service cloud.firestore {
       return request.resource.data.keys().hasOnly([
         'uid',
         'displayName',
+        'photoURL',
         'game',
         'date',
         'score',

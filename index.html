@@ -69,8 +69,7 @@
         <div id="menu-screen" class="screen">
             <div class="menu-top-bar">
                 <div class="menu-user">
-                    <span class="menu-greeting">Hi,</span>
-                    <span class="menu-user-name" id="menu-user-name">Player</span>
+                    <span class="menu-user-pill">Hi, <span id="menu-user-name">Player</span></span>
                 </div>
                 <div class="menu-actions">
                     <button class="icon-button" id="menu-dropdown-toggle" aria-haspopup="true" aria-expanded="false" aria-label="Open menu">
@@ -133,14 +132,11 @@
                 <div></div>
             </div>
             <div class="panel">
-                <label class="form-field">
-                    <span>Game</span>
-                    <select id="scores-game-select">
-                        <option value="wordle">Wordle</option>
-                        <option value="sudoku">Sudoku</option>
-                        <option value="crossword">Crossword</option>
-                    </select>
-                </label>
+                <div class="score-game-tabs" role="tablist" aria-label="Select game">
+                    <button class="score-game-card active" data-game="wordle" type="button">Wordle</button>
+                    <button class="score-game-card" data-game="sudoku" type="button">Sudoku</button>
+                    <button class="score-game-card" data-game="crossword" type="button">Crossword</button>
+                </div>
                 <div class="scores-toggle" role="group" aria-label="Score range">
                     <button class="toggle-button active" data-mode="daily" type="button">Daily</button>
                     <button class="toggle-button" data-mode="all" type="button">All Time</button>
@@ -171,14 +167,6 @@
                 <div class="invite-row">
                     <input type="text" id="friend-tag" readonly>
                     <button class="secondary-button" onclick="copyFriendTag()">Copy</button>
-                </div>
-            </div>
-            <div class="panel">
-                <h3>Invite friends</h3>
-                <p>Share your invite link so friends can join your leaderboard.</p>
-                <div class="invite-row">
-                    <input type="text" id="invite-link" readonly>
-                    <button class="secondary-button" onclick="copyInviteLink()">Copy</button>
                 </div>
             </div>
             <div class="panel">
@@ -292,6 +280,12 @@
         orderBy,
         limit
       } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
+            import {
+                getStorage,
+                ref,
+                uploadBytes,
+                getDownloadURL
+            } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-storage.js";
       // TODO: Add SDKs for Firebase products that you want to use
       // https://firebase.google.com/docs/web/setup#available-libraries
 
@@ -312,6 +306,7 @@
       const analytics = getAnalytics(app);
       const auth = getAuth(app);
       const db = getFirestore(app);
+    const storage = getStorage(app);
       const provider = new GoogleAuthProvider();
 
       window.firebaseServices = {
@@ -319,6 +314,7 @@
         analytics,
         auth,
         db,
+        storage,
         provider,
         createUserWithEmailAndPassword,
         signInWithEmailAndPassword,
@@ -339,7 +335,10 @@
         serverTimestamp,
         where,
         orderBy,
-        limit
+                limit,
+                ref,
+                uploadBytes,
+                getDownloadURL
       };
 
       window.dispatchEvent(new Event('firebase-ready'));

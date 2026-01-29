@@ -12,6 +12,7 @@ const gameLabels = {
 let dailyScoresCache = {};
 let scoresMode = 'daily';
 let pendingInviteUid = null;
+let selectedScoresGame = 'wordle';
 
 function getInviteParam() {
     const params = new URLSearchParams(window.location.search);
@@ -27,8 +28,10 @@ document.addEventListener('DOMContentLoaded', () => {
     setupMenuDropdown();
     document.getElementById('auth-form').addEventListener('submit', handleAuthSubmit);
     document.getElementById('google-signin').addEventListener('click', handleGoogleSignIn);
-    document.getElementById('scores-game-select').addEventListener('change', (event) => {
-        loadLeaderboards(event.target.value, scoresMode);
+    document.querySelectorAll('.score-game-card').forEach((card) => {
+        card.addEventListener('click', () => {
+            setScoresGame(card.dataset.game || 'wordle');
+        });
     });
     document.querySelectorAll('.toggle-button').forEach((button) => {
         button.addEventListener('click', () => {
@@ -132,8 +135,7 @@ function showProfile() {
 function showTopScores() {
     hideAllScreens();
     document.getElementById('scores-screen').classList.add('active');
-    const game = document.getElementById('scores-game-select').value;
-    loadLeaderboards(game, scoresMode);
+    loadLeaderboards(selectedScoresGame, scoresMode);
 }
 
 function showConnect() {
@@ -372,8 +374,15 @@ function setScoresMode(mode) {
     document.querySelectorAll('.toggle-button').forEach((button) => {
         button.classList.toggle('active', button.dataset.mode === mode);
     });
-    const game = document.getElementById('scores-game-select').value;
-    loadLeaderboards(game, scoresMode);
+    loadLeaderboards(selectedScoresGame, scoresMode);
+}
+
+function setScoresGame(game) {
+    selectedScoresGame = game;
+    document.querySelectorAll('.score-game-card').forEach((card) => {
+        card.classList.toggle('active', card.dataset.game === game);
+    });
+    loadLeaderboards(selectedScoresGame, scoresMode);
 }
 
 function scoreForGame(game, details) {
@@ -390,9 +399,13 @@ async function recordScore(game, details = {}) {
     const date = getTodayKey();
     const score = scoreForGame(game, details);
     const scoreRef = firebase.doc(firebase.db, 'scores', `${currentUser.uid}_${game}_${date}`);
+    const userRef = firebase.doc(firebase.db, 'users', currentUser.uid);
+    const userSnap = await firebase.getDoc(userRef);
+    const userPhotoURL = userSnap.exists() ? userSnap.data().photoURL : null;
     await firebase.setDoc(scoreRef, {
         uid: currentUser.uid,
         displayName: currentUser.displayName || 'Player',
+        photoURL: userPhotoURL || null,
         game,
         date,
         score,
@@ -499,7 +512,11 @@ function renderLeaderboard(elementId, snapshot, mode = 'daily', dedupeByUser = f
 
     finalEntries.forEach((data) => {
         const item = document.createElement('li');
-        item.textContent = `${data.displayName || data.uid} · ${data.score}`;
+        const avatar = data.photoURL || 'https://www.gravatar.com/avatar/?d=mp';
+        item.innerHTML = `
+            <img class="leader-avatar" src="${avatar}" alt="${data.displayName || 'Player'}">
+            <span>${data.displayName || data.uid} · ${data.score}</span>
+        `;
         list.appendChild(item);
     });
 }
@@ -512,7 +529,7 @@ async function renderProfile() {
     const data = userSnap.exists() ? userSnap.data() : {};
     const displayName = data.displayName || currentUser.displayName || 'Player';
     const email = currentUser.email || '—';
-    const photoURL = data.photoURL || currentUser.photoURL || '';
+    const photoURL = data.photoURL || '';
     const friendCount = (await getFriendIds()).length;
     profile.innerHTML = `
         <div class="panel profile-card">
@@ -552,16 +569,17 @@ async function getSelectedProfilePhoto() {
     const fileInput = document.getElementById('profile-photo-file');
     if (fileInput && fileInput.files && fileInput.files[0]) {
         const file = fileInput.files[0];
-        const maxSizeBytes = 900 * 1024;
+        const maxSizeBytes = 5 * 1024 * 1024;
         if (file.size > maxSizeBytes) {
-            throw new Error('Photo is too large. Please upload an image under 900KB.');
+            throw new Error('Photo is too large. Please upload an image under 5MB.');
         }
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result);
-            reader.onerror = reject;
-            reader.readAsDataURL(file);
-        });
+        if (!firebase?.storage) {
+            throw new Error('Storage is not configured.');
+        }
+        const filePath = `profilePhotos/${currentUser.uid}/${Date.now()}_${file.name}`;
+        const storageRef = firebase.ref(firebase.storage, filePath);
+        await firebase.uploadBytes(storageRef, file, { contentType: file.type });
+        return await firebase.getDownloadURL(storageRef);
     }
     return '';
 }
@@ -610,8 +628,6 @@ async function resetProfileForm() {
 // Friends and invites
 async function renderInviteLink() {
     if (!currentUser) return;
-    const link = `${window.location.origin}${window.location.pathname}?invite=${currentUser.uid}`;
-    document.getElementById('invite-link').value = link;
     const userRef = firebase.doc(firebase.db, 'users', currentUser.uid);
     const userSnap = await firebase.getDoc(userRef);
     const tag = userSnap.exists() ? userSnap.data().friendTag : '';
@@ -619,12 +635,6 @@ async function renderInviteLink() {
     if (friendTagInput) {
         friendTagInput.value = tag || '';
     }
-}
-
-async function copyInviteLink() {
-    const input = document.getElementById('invite-link');
-    input.select();
-    document.execCommand('copy');
 }
 
 async function copyFriendTag() {
@@ -685,12 +695,13 @@ async function sendFriendRequest(target) {
     const currentUserRef = firebase.doc(firebase.db, 'users', currentUser.uid);
     const userSnap = await firebase.getDoc(currentUserRef);
     const currentTag = userSnap.exists() ? userSnap.data().friendTag : null;
+    const currentPhoto = userSnap.exists() ? userSnap.data().photoURL : null;
     const requestRef = firebase.doc(firebase.db, 'users', target.uid, 'requests', currentUser.uid);
     await firebase.setDoc(requestRef, {
         fromUid: currentUser.uid,
         fromName: currentUser.displayName || 'Player',
         fromTag: currentTag || null,
-        fromPhotoURL: currentUser.photoURL || null,
+        fromPhotoURL: currentPhoto || null,
         createdAt: firebase.serverTimestamp()
     });
 }
