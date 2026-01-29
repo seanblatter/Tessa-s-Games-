@@ -13,11 +13,11 @@ function initCrossword() {
     newCrosswordGame();
 }
 
-function newCrosswordGame() {
+async function newCrosswordGame() {
     if (window.canPlayDailyGame && !window.canPlayDailyGame('crossword')) {
         return;
     }
-    const puzzle = getCrosswordPuzzleOfDay();
+    const puzzle = await getCrosswordPuzzleOfDay();
     const normalizedGrid = normalizeGrid(puzzle.grid);
     const clues = puzzle.clues || generateClues(normalizedGrid);
     
@@ -38,10 +38,84 @@ function newCrosswordGame() {
     createCrosswordClues();
 }
 
-function getCrosswordPuzzleOfDay() {
+async function getCrosswordPuzzleOfDay() {
     const today = new Date();
     const dayIndex = Math.floor(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()) / 86400000);
-    return crosswordPuzzles[dayIndex % crosswordPuzzles.length];
+    const fallbackPuzzle = crosswordPuzzles[dayIndex % crosswordPuzzles.length];
+    const apiPuzzle = await fetchCrosswordApiPuzzle(today);
+    return apiPuzzle || fallbackPuzzle;
+}
+
+async function fetchCrosswordApiPuzzle(date) {
+    try {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const url = `https://www.xwordinfo.com/JSON/Data.ashx?date=${year}/${month}/${day}`;
+        const response = await fetch(url);
+        if (!response.ok) return null;
+        const data = await response.json();
+        if (!data || !data.grid || !data.size) return null;
+        const grid = normalizeXwordInfoGrid(data);
+        const clues = normalizeXwordInfoClues(data);
+        return { grid, clues };
+    } catch (error) {
+        return null;
+    }
+}
+
+function normalizeXwordInfoGrid(data) {
+    const rows = data.size.rows;
+    const cols = data.size.cols;
+    const grid = [];
+    for (let r = 0; r < rows; r++) {
+        const row = [];
+        for (let c = 0; c < cols; c++) {
+            const cell = data.grid[r * cols + c];
+            row.push(cell === '.' ? '#' : cell);
+        }
+        grid.push(row);
+    }
+    return grid;
+}
+
+function normalizeXwordInfoClues(data) {
+    const across = (data.clues?.across || []).map((clue, index) => {
+        const [num, text] = splitClue(clue);
+        const answer = data.answers?.across?.[index] || '';
+        const { row, col, length } = findAnswerPosition(data, answer, num, 'across');
+        return { number: num, clue: text, answer, row, col, length };
+    });
+    const down = (data.clues?.down || []).map((clue, index) => {
+        const [num, text] = splitClue(clue);
+        const answer = data.answers?.down?.[index] || '';
+        const { row, col, length } = findAnswerPosition(data, answer, num, 'down');
+        return { number: num, clue: text, answer, row, col, length };
+    });
+    return { across, down };
+}
+
+function splitClue(raw) {
+    if (typeof raw !== 'string') return [0, ''];
+    const match = raw.match(/^(\d+)\.\s*(.*)$/);
+    if (!match) return [0, raw];
+    return [Number(match[1]), match[2]];
+}
+
+function findAnswerPosition(data, answer, number, direction) {
+    const rows = data.size.rows;
+    const cols = data.size.cols;
+    const grid = normalizeXwordInfoGrid(data);
+    const gridNums = data.gridnums || [];
+    for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+            const index = r * cols + c;
+            if (grid[r][c] === '#' || gridNums[index] !== number) continue;
+            const length = answer.length;
+            return { row: r, col: c, length };
+        }
+    }
+    return { row: 0, col: 0, length: answer.length };
 }
 
 function normalizeGrid(grid) {
