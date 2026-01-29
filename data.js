@@ -24,62 +24,91 @@ const wordleWords = [
     'PRIDE'
 ];
 
-// Crossword puzzles - customizable with personal clues
+// Crossword clue bank for auto-generated puzzles
+const crosswordClueBank = {
+    CAT: 'Feline pet',
+    APE: 'Primate',
+    TEN: 'Number after nine',
+    SUN: 'Day star',
+    USE: 'Put to work',
+    NET: 'Mesh catcher',
+    EAR: 'Hearing organ',
+    ARE: 'Plural of be',
+    RED: 'Color of a stop sign',
+    DOG: 'Loyal pet',
+    ORE: 'Metal-bearing rock',
+    GEL: 'Thickened liquid',
+    PEN: 'Writing tool',
+    ERA: 'Historical period',
+    NEW: 'Not old',
+    MAP: 'Navigation aid',
+    PEA: 'Green pod seed',
+    RAN: 'Moved quickly',
+    ATE: 'Had a meal',
+    NOW: 'At this time',
+    LIP: 'Edge of the mouth',
+    ION: 'Charged atom',
+    PET: 'Companion animal'
+};
+
+// Crossword puzzles - 15x15 daily rotation
 const crosswordPuzzles = [
     {
         grid: [
-            ['T', 'E', 'S', 'S', 'A'],
-            ['#', '#', 'M', '#', '#'],
-            ['L', 'O', 'V', 'E', 'D'],
-            ['#', '#', 'I', '#', '#'],
-            ['H', 'A', 'P', 'P', 'Y']
-        ],
-        clues: {
-            across: [
-                { number: 1, clue: 'The most amazing person in the world', answer: 'TESSA', row: 0, col: 0, length: 5 },
-                { number: 3, clue: 'A feeling of deep affection', answer: 'LOVED', row: 2, col: 0, length: 5 },
-                { number: 5, clue: 'Feeling joy and contentment', answer: 'HAPPY', row: 4, col: 0, length: 5 }
-            ],
-            down: [
-                { number: 2, clue: 'To be cheerful', answer: 'SMILE', row: 0, col: 2, length: 5 }
-            ]
-        }
+            'CAT#DOG#SUN#MAP',
+            'APE#ORE#USE#ARE',
+            'TEN#GEL#NET#PET',
+            '###############',
+            'DOG#SUN#MAP#CAT',
+            'ORE#USE#ARE#APE',
+            'GEL#NET#PET#TEN',
+            '###############',
+            'SUN#MAP#CAT#DOG',
+            'USE#ARE#APE#ORE',
+            'NET#PET#TEN#GEL',
+            '###############',
+            'MAP#CAT#DOG#SUN',
+            'ARE#APE#ORE#USE',
+            'PET#TEN#GEL#NET'
+        ]
     },
     {
         grid: [
-            ['S', 'W', 'E', 'E', 'T'],
-            ['#', '#', '#', '#', '#'],
-            ['A', 'N', 'G', 'E', 'L'],
-            ['#', '#', '#', '#', '#'],
-            ['H', 'E', 'A', 'R', 'T']
-        ],
-        clues: {
-            across: [
-                { number: 1, clue: 'Having a pleasant taste or nature', answer: 'SWEET', row: 0, col: 0, length: 5 },
-                { number: 2, clue: 'A divine messenger or perfect person', answer: 'ANGEL', row: 2, col: 0, length: 5 },
-                { number: 3, clue: 'The organ that symbolizes love', answer: 'HEART', row: 4, col: 0, length: 5 }
-            ],
-            down: []
-        }
+            'SUN#MAP#CAT#DOG',
+            'USE#ARE#APE#ORE',
+            'NET#PET#TEN#GEL',
+            '###############',
+            'MAP#CAT#DOG#SUN',
+            'ARE#APE#ORE#USE',
+            'PET#TEN#GEL#NET',
+            '###############',
+            'CAT#DOG#SUN#MAP',
+            'APE#ORE#USE#ARE',
+            'TEN#GEL#NET#PET',
+            '###############',
+            'DOG#SUN#MAP#CAT',
+            'ORE#USE#ARE#APE',
+            'GEL#NET#PET#TEN'
+        ]
     },
     {
         grid: [
-            ['D', '#', 'B', '#', 'S'],
-            ['R', '#', 'R', '#', 'H'],
-            ['E', 'M', 'A', 'G', 'I', 'C'],
-            ['A', '#', 'V', '#', 'N'],
-            ['M', '#', 'E', '#', 'E']
-        ],
-        clues: {
-            across: [
-                { number: 2, clue: 'Supernatural power or enchantment', answer: 'MAGIC', row: 2, col: 1, length: 5 }
-            ],
-            down: [
-                { number: 1, clue: 'A cherished aspiration', answer: 'DREAM', row: 0, col: 0, length: 5 },
-                { number: 3, clue: 'Courageous and fearless', answer: 'BRAVE', row: 0, col: 2, length: 5 },
-                { number: 4, clue: 'To emit light or be bright', answer: 'SHINE', row: 0, col: 4, length: 5 }
-            ]
-        }
+            'MAP#CAT#DOG#SUN',
+            'ARE#APE#ORE#USE',
+            'PET#TEN#GEL#NET',
+            '###############',
+            'CAT#DOG#SUN#MAP',
+            'APE#ORE#USE#ARE',
+            'TEN#GEL#NET#PET',
+            '###############',
+            'DOG#SUN#MAP#CAT',
+            'ORE#USE#ARE#APE',
+            'GEL#NET#PET#TEN',
+            '###############',
+            'SUN#MAP#CAT#DOG',
+            'USE#ARE#APE#ORE',
+            'NET#PET#TEN#GEL'
+        ]
     }
 ];
 

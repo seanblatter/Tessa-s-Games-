@@ -17,11 +17,17 @@ function newCrosswordGame() {
     if (window.canPlayDailyGame && !window.canPlayDailyGame('crossword')) {
         return;
     }
-    const puzzle = crosswordPuzzles[Math.floor(Math.random() * crosswordPuzzles.length)];
+    const puzzle = getCrosswordPuzzleOfDay();
+    const normalizedGrid = normalizeGrid(puzzle.grid);
+    const clues = puzzle.clues || generateClues(normalizedGrid);
     
     crosswordState = {
-        puzzle: puzzle,
-        board: puzzle.grid.map(row => row.map(cell => cell === '#' ? '#' : '')),
+        puzzle: {
+            ...puzzle,
+            grid: normalizedGrid,
+            clues
+        },
+        board: normalizedGrid.map(row => row.map(cell => cell === '#' ? '#' : '')),
         selectedCell: null,
         direction: 'across',
         currentClue: null,
@@ -32,14 +38,82 @@ function newCrosswordGame() {
     createCrosswordClues();
 }
 
+function getCrosswordPuzzleOfDay() {
+    const today = new Date();
+    const dayIndex = Math.floor(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()) / 86400000);
+    return crosswordPuzzles[dayIndex % crosswordPuzzles.length];
+}
+
+function normalizeGrid(grid) {
+    if (!grid || !grid.length) return [];
+    if (typeof grid[0] === 'string') {
+        return grid.map(row => row.split(''));
+    }
+    return grid.map(row => row.slice());
+}
+
+function generateClues(grid) {
+    const across = [];
+    const down = [];
+    let number = 1;
+    const rows = grid.length;
+    const cols = grid[0].length;
+
+    for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+            if (grid[row][col] === '#') continue;
+            const startsAcross = (col === 0 || grid[row][col - 1] === '#') && col + 1 < cols && grid[row][col + 1] !== '#';
+            const startsDown = (row === 0 || grid[row - 1][col] === '#') && row + 1 < rows && grid[row + 1][col] !== '#';
+
+            if (startsAcross || startsDown) {
+                const clueNumber = number++;
+                if (startsAcross) {
+                    const answer = collectAnswer(grid, row, col, 'across');
+                    across.push(buildClue(clueNumber, answer, row, col));
+                }
+                if (startsDown) {
+                    const answer = collectAnswer(grid, row, col, 'down');
+                    down.push(buildClue(clueNumber, answer, row, col));
+                }
+            }
+        }
+    }
+    return { across, down };
+}
+
+function collectAnswer(grid, row, col, direction) {
+    const letters = [];
+    const rows = grid.length;
+    const cols = grid[0].length;
+    let r = row;
+    let c = col;
+    while (r < rows && c < cols && grid[r][c] !== '#') {
+        letters.push(grid[r][c]);
+        if (direction === 'across') {
+            c++;
+        } else {
+            r++;
+        }
+    }
+    return letters.join('');
+}
+
+function buildClue(number, answer, row, col) {
+    const clueBank = typeof crosswordClueBank !== 'undefined' ? crosswordClueBank : {};
+    const clue = clueBank[answer] || `Fill in: ${answer}`;
+    return { number, clue, answer, row, col, length: answer.length };
+}
+
 function createCrosswordBoard() {
     const board = document.getElementById('crossword-board');
     board.innerHTML = '';
     
     const rows = crosswordState.puzzle.grid.length;
     const cols = crosswordState.puzzle.grid[0].length;
-    
-    board.style.gridTemplateColumns = `repeat(${cols}, 35px)`;
+    const containerWidth = Math.min(window.innerWidth, 760) - 80;
+    const cellSize = Math.max(22, Math.min(32, Math.floor(containerWidth / cols)));
+    board.style.gridTemplateColumns = `repeat(${cols}, ${cellSize}px)`;
+    board.style.setProperty('--cell-size', `${cellSize}px`);
     
     // Create number map
     const numberMap = {};
