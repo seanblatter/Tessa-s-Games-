@@ -3,11 +3,10 @@
 let firebase = null;
 let currentUser = null;
 let authMode = 'signin';
-const games = ['wordle', 'sudoku', 'crossword'];
+const games = ['wordle', 'sudoku'];
 const gameLabels = {
     wordle: 'Wordle',
-    sudoku: 'Sudoku',
-    crossword: 'Crossword'
+    sudoku: 'Sudoku'
 };
 let dailyScoresCache = {};
 let scoresMode = 'daily';
@@ -158,9 +157,6 @@ function showGame(gameName) {
             break;
         case 'sudoku':
             initSudoku();
-            break;
-        case 'crossword':
-            initCrossword();
             break;
     }
 }
@@ -438,7 +434,7 @@ async function loadDailyScores() {
         const displayValue = (() => {
             if (!data) return '—';
             if (game === 'wordle') return data.wordlePattern || '—';
-            if (game === 'sudoku' || game === 'crossword') return formatDuration(data.durationSeconds);
+            if (game === 'sudoku') return formatDuration(data.durationSeconds);
             return data.score ?? '—';
         })();
         const row = document.createElement('div');

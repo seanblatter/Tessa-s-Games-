@@ -17,7 +17,7 @@
             <div class="landing-content">
                 <div class="landing-card">
                     <h2>Daily puzzles made for you</h2>
-                    <p>Jump into Wordle, Sudoku, and Crossword challenges designed for fun, focus, and friendly competition.</p>
+                    <p>Jump into Wordle and Sudoku challenges designed for fun, focus, and friendly competition.</p>
                 </div>
                 <div class="landing-card">
                     <h2>Track your streaks</h2>
@@ -104,12 +104,7 @@
                 <button class="game-button" onclick="showGame('sudoku')">
                     <span class="game-icon">🔢</span>
                     <span class="game-name">Sudoku</span>
-                    <span class="game-desc">Classic number puzzle</span>
-                </button>
-                <button class="game-button" onclick="showGame('crossword')">
-                    <span class="game-icon">🔤</span>
-                    <span class="game-name">Crossword</span>
-                    <span class="game-desc">Custom word puzzles</span>
+                    <span class="game-desc">Classic 9x9 number puzzle</span>
                 </button>
             </div>
         </div>
@@ -135,7 +130,6 @@
                 <div class="score-game-tabs" role="tablist" aria-label="Select game">
                     <button class="score-game-card active" data-game="wordle" type="button">Wordle</button>
                     <button class="score-game-card" data-game="sudoku" type="button">Sudoku</button>
-                    <button class="score-game-card" data-game="crossword" type="button">Crossword</button>
                 </div>
                 <div class="scores-toggle" role="group" aria-label="Score range">
                     <button class="toggle-button active" data-mode="daily" type="button">Daily</button>
@@ -221,34 +215,11 @@
             </div>
         </div>
 
-        <!-- Crossword Game -->
-        <div id="crossword-screen" class="screen">
-            <div class="game-header">
-                <button class="back-button" onclick="showMenu()">← Back</button>
-                <h2>Crossword</h2>
-                <button class="new-game-button" data-game="crossword" onclick="newCrosswordGame()">New Game</button>
-            </div>
-            <div id="crossword-game">
-                <div id="crossword-board"></div>
-                <div id="crossword-clues">
-                    <div class="clues-section">
-                        <h3>Across</h3>
-                        <div id="across-clues"></div>
-                    </div>
-                    <div class="clues-section">
-                        <h3>Down</h3>
-                        <div id="down-clues"></div>
-                    </div>
-                </div>
-                <div id="crossword-message" class="message"></div>
-            </div>
-        </div>
     </div>
 
     <script src="data.js"></script>
     <script src="wordle.js"></script>
     <script src="sudoku.js"></script>
-    <script src="crossword.js"></script>
     <script type="module">
       // Import the functions you need from the SDKs you need
       import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";

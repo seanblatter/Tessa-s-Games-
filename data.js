@@ -1,116 +1,11 @@
-// Game Data for Tessa's Games
+// Game data for Tessa's Games
 
-// Wordle words - customizable for Tessa
 const wordleWords = [
-    'TESSA',
-    'ANGEL',
-    'HEART',
-    'SMILE',
-    'HAPPY',
-    'SWEET',
-    'LOVED',
-    'DREAM',
-    'MAGIC',
-    'PEARL',
-    'GRACE',
-    'SHINE',
-    'BLOOM',
-    'CHARM',
-    'DELIGHT',
-    'BLISS',
-    'ADORE',
-    'DANCE',
-    'BRAVE',
-    'PRIDE'
+    'TESSA', 'ANGEL', 'HEART', 'LOVED', 'SMILE', 'HAPPY', 'SWEET', 'PEACE', 'LIGHT', 'DREAM', 'STARS', 'MAGIC', 'BLISS', 'GRACE', 'CHARM', 'BLOOM', 'FAITH', 'SHINE', 'LAUGH', 'MUSIC', 'DANCE', 'SUNNY', 'CLOUD', 'OCEAN', 'RIVER', 'SPARK', 'BRAVE', 'KINDY', 'NOBLE', 'AMBER', 'ADORE', 'ALIVE', 'APPLE', 'BEACH', 'BERRY', 'BLAZE', 'BRISK', 'BUNNY', 'CANDY', 'CHEER', 'CHIME', 'CORAL', 'COAST', 'CRISP', 'DAISY', 'DELTA', 'EAGER', 'EMBER', 'FANCY', 'FLARE', 'FLORA', 'FLOUR', 'GLEAM', 'GLOWY', 'GRAPE', 'HONEY', 'HUMOR', 'IVORY', 'JOLLY', 'JUICE', 'KARMA', 'LEMON', 'LILAC', 'LOTUS', 'LUNAR', 'MANGO', 'MAPLE', 'MIRTH', 'NIGHT', 'OLIVE', 'PANDA', 'PEARL', 'PETAL', 'PINEY', 'PRISM', 'QUART', 'ROBIN', 'ROSEY', 'RUSTY', 'SOLAR'
 ];
 
-// Crossword clue bank for auto-generated puzzles
-const crosswordClueBank = {
-    GARDENS: 'Places with flowers and paths',
-    RAINBOW: 'Colorful arc after rain',
-    HARMONY: 'Pleasant musical blend',
-    JOURNEY: 'Long trip',
-    ORCHARD: 'Fruit tree grove',
-    HORIZON: 'Skyline boundary',
-    PLAYFUL: 'Full of fun',
-    WHISPER: 'Soft spoken sound',
-    LIBRARY: 'Place to borrow books',
-    MEADOWS: 'Open grassy fields',
-    LANTERN: 'Portable light',
-    COMPASS: 'Directional instrument',
-    SEASIDE: 'Coastline area',
-    CUPCAKE: 'Small frosted dessert',
-    KINDRED: 'Related by family',
-    SEASALT: 'Ocean mineral seasoning',
-    STARLIT: 'Lit by stars',
-    SUNBEAM: 'Ray of sunlight'
-};
-
-// Crossword puzzles - 15x15 daily rotation (no 3-letter words)
-const crosswordPuzzles = [
-    {
-        grid: [
-            'GARDENS#RAINBOW',
-            'HARMONY#JOURNEY',
-            'ORCHARD#HORIZON',
-            'PLAYFUL#WHISPER',
-            'LIBRARY#MEADOWS',
-            'LANTERN#COMPASS',
-            'SEASIDE#CUPCAKE',
-            'KINDRED#SEASALT',
-            'STARLIT#SUNBEAM',
-            'RAINBOW#GARDENS',
-            'JOURNEY#HARMONY',
-            'HORIZON#ORCHARD',
-            'WHISPER#PLAYFUL',
-            'MEADOWS#LIBRARY',
-            'COMPASS#LANTERN'
-        ]
-    },
-    {
-        grid: [
-            'HARMONY#JOURNEY',
-            'ORCHARD#HORIZON',
-            'PLAYFUL#WHISPER',
-            'LIBRARY#MEADOWS',
-            'LANTERN#COMPASS',
-            'SEASIDE#CUPCAKE',
-            'KINDRED#SEASALT',
-            'STARLIT#SUNBEAM',
-            'GARDENS#RAINBOW',
-            'JOURNEY#HARMONY',
-            'HORIZON#ORCHARD',
-            'WHISPER#PLAYFUL',
-            'MEADOWS#LIBRARY',
-            'COMPASS#LANTERN',
-            'RAINBOW#GARDENS'
-        ]
-    },
-    {
-        grid: [
-            'ORCHARD#HORIZON',
-            'PLAYFUL#WHISPER',
-            'LIBRARY#MEADOWS',
-            'LANTERN#COMPASS',
-            'SEASIDE#CUPCAKE',
-            'KINDRED#SEASALT',
-            'STARLIT#SUNBEAM',
-            'GARDENS#RAINBOW',
-            'HARMONY#JOURNEY',
-            'HORIZON#ORCHARD',
-            'WHISPER#PLAYFUL',
-            'MEADOWS#LIBRARY',
-            'COMPASS#LANTERN',
-            'RAINBOW#GARDENS',
-            'JOURNEY#HARMONY'
-        ]
-    }
-];
-
-// Sudoku puzzles - various difficulty levels
 const sudokuPuzzles = [
     {
-        // Easy puzzle
         puzzle: [
             [5, 3, 0, 0, 7, 0, 0, 0, 0],
             [6, 0, 0, 1, 9, 5, 0, 0, 0],
@@ -135,12 +30,11 @@ const sudokuPuzzles = [
         ]
     },
     {
-        // Medium puzzle
         puzzle: [
             [0, 0, 0, 6, 0, 0, 4, 0, 0],
             [7, 0, 0, 0, 0, 3, 6, 0, 0],
             [0, 0, 0, 0, 9, 1, 0, 8, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 8, 0, 0, 0, 0, 1, 0],
             [0, 5, 0, 1, 8, 0, 0, 0, 3],
             [0, 0, 0, 3, 0, 6, 0, 4, 5],
             [0, 4, 0, 2, 0, 0, 0, 6, 0],
@@ -160,7 +54,6 @@ const sudokuPuzzles = [
         ]
     },
     {
-        // Another easy puzzle
         puzzle: [
             [0, 0, 0, 2, 6, 0, 7, 0, 1],
             [6, 8, 0, 0, 7, 0, 0, 9, 0],
@@ -185,15 +78,14 @@ const sudokuPuzzles = [
         ]
     },
     {
-        // Easy variation
         puzzle: [
-            [5, 0, 0, 0, 7, 0, 0, 1, 0],
-            [0, 7, 0, 1, 0, 5, 0, 0, 8],
-            [1, 0, 8, 0, 0, 2, 0, 6, 0],
-            [0, 5, 0, 7, 0, 0, 4, 0, 3],
-            [4, 0, 6, 0, 5, 0, 7, 0, 1],
+            [5, 0, 4, 0, 7, 0, 9, 0, 2],
+            [0, 7, 0, 1, 0, 5, 0, 4, 0],
+            [1, 0, 8, 0, 4, 0, 5, 0, 7],
+            [0, 5, 0, 7, 0, 1, 0, 2, 0],
+            [4, 0, 0, 0, 5, 0, 0, 0, 1],
             [0, 1, 0, 9, 0, 4, 0, 5, 0],
-            [9, 0, 0, 5, 3, 0, 2, 0, 4],
+            [9, 0, 1, 0, 3, 0, 2, 0, 4],
             [0, 8, 0, 4, 0, 9, 0, 3, 0],
             [3, 0, 5, 0, 8, 0, 1, 0, 9]
         ],
@@ -210,17 +102,16 @@ const sudokuPuzzles = [
         ]
     },
     {
-        // Medium variation
         puzzle: [
-            [0, 8, 1, 0, 7, 0, 4, 0, 9],
-            [7, 0, 0, 8, 0, 3, 0, 5, 0],
-            [0, 6, 0, 5, 0, 1, 7, 0, 2],
-            [4, 0, 8, 0, 5, 0, 2, 1, 0],
-            [0, 5, 0, 1, 0, 4, 0, 7, 0],
-            [1, 0, 9, 0, 2, 0, 8, 0, 5],
-            [0, 4, 0, 2, 1, 0, 3, 0, 7],
-            [9, 0, 3, 0, 6, 8, 0, 2, 0],
-            [0, 2, 7, 4, 0, 5, 1, 0, 8]
+            [5, 0, 0, 0, 7, 0, 0, 0, 9],
+            [0, 9, 0, 0, 0, 0, 0, 5, 0],
+            [0, 0, 4, 0, 0, 0, 7, 0, 0],
+            [0, 0, 0, 9, 0, 7, 0, 0, 0],
+            [2, 0, 6, 0, 8, 0, 9, 0, 3],
+            [0, 0, 0, 3, 0, 6, 0, 0, 0],
+            [0, 0, 5, 0, 0, 0, 3, 0, 0],
+            [0, 1, 0, 0, 0, 0, 0, 2, 0],
+            [6, 0, 0, 0, 3, 0, 0, 0, 8]
         ],
         solution: [
             [5, 8, 1, 6, 7, 2, 4, 3, 9],
@@ -235,17 +126,16 @@ const sudokuPuzzles = [
         ]
     },
     {
-        // Easy variation
         puzzle: [
-            [4, 0, 5, 0, 6, 0, 7, 8, 0],
-            [0, 8, 0, 5, 0, 1, 0, 9, 0],
-            [1, 0, 0, 8, 3, 0, 5, 0, 2],
-            [0, 2, 6, 0, 9, 5, 0, 4, 0],
-            [3, 0, 4, 6, 0, 2, 9, 0, 5],
-            [0, 5, 0, 7, 4, 0, 6, 2, 0],
-            [5, 1, 0, 3, 0, 6, 0, 7, 4],
-            [0, 4, 8, 0, 5, 0, 1, 0, 6],
-            [7, 0, 3, 4, 0, 8, 2, 0, 9]
+            [0, 3, 5, 0, 6, 9, 0, 8, 0],
+            [6, 0, 0, 5, 0, 0, 4, 0, 0],
+            [0, 9, 0, 0, 3, 0, 0, 6, 0],
+            [0, 0, 6, 1, 0, 5, 3, 0, 0],
+            [3, 0, 0, 0, 8, 0, 0, 0, 5],
+            [0, 0, 1, 7, 0, 3, 6, 0, 0],
+            [0, 1, 0, 0, 2, 0, 0, 7, 0],
+            [0, 0, 8, 0, 0, 7, 0, 0, 6],
+            [0, 6, 0, 4, 1, 8, 0, 5, 0]
         ],
         solution: [
             [4, 3, 5, 2, 6, 9, 7, 8, 1],
@@ -257,6 +147,102 @@ const sudokuPuzzles = [
             [5, 1, 9, 3, 2, 6, 8, 7, 4],
             [2, 4, 8, 9, 5, 7, 1, 3, 6],
             [7, 6, 3, 4, 1, 8, 2, 5, 9]
+        ]
+    },
+    {
+        puzzle: [
+            [5, 0, 0, 6, 0, 0, 9, 0, 0],
+            [0, 7, 0, 0, 9, 0, 0, 4, 0],
+            [0, 0, 8, 0, 0, 2, 0, 0, 7],
+            [8, 0, 0, 0, 6, 0, 0, 0, 3],
+            [0, 2, 0, 8, 0, 3, 0, 9, 0],
+            [7, 0, 0, 0, 2, 0, 0, 0, 6],
+            [9, 0, 0, 5, 0, 0, 2, 0, 0],
+            [0, 8, 0, 0, 1, 0, 0, 3, 0],
+            [0, 0, 5, 0, 0, 6, 0, 0, 9]
+        ],
+        solution: [
+            [5, 3, 4, 6, 7, 8, 9, 1, 2],
+            [6, 7, 2, 1, 9, 5, 3, 4, 8],
+            [1, 9, 8, 3, 4, 2, 5, 6, 7],
+            [8, 5, 9, 7, 6, 1, 4, 2, 3],
+            [4, 2, 6, 8, 5, 3, 7, 9, 1],
+            [7, 1, 3, 9, 2, 4, 8, 5, 6],
+            [9, 6, 1, 5, 3, 7, 2, 8, 4],
+            [2, 8, 7, 4, 1, 9, 6, 3, 5],
+            [3, 4, 5, 2, 8, 6, 1, 7, 9]
+        ]
+    },
+    {
+        puzzle: [
+            [5, 0, 0, 0, 7, 0, 0, 0, 9],
+            [0, 0, 2, 0, 0, 0, 6, 0, 0],
+            [0, 6, 0, 0, 9, 0, 0, 8, 0],
+            [4, 0, 0, 9, 0, 7, 0, 0, 6],
+            [0, 0, 0, 0, 8, 0, 0, 0, 0],
+            [1, 0, 0, 3, 0, 6, 0, 0, 5],
+            [0, 4, 0, 0, 1, 0, 0, 6, 0],
+            [0, 0, 3, 0, 0, 0, 5, 0, 0],
+            [6, 0, 0, 0, 3, 0, 0, 0, 8]
+        ],
+        solution: [
+            [5, 8, 1, 6, 7, 2, 4, 3, 9],
+            [7, 9, 2, 8, 4, 3, 6, 5, 1],
+            [3, 6, 4, 5, 9, 1, 7, 8, 2],
+            [4, 3, 8, 9, 5, 7, 2, 1, 6],
+            [2, 5, 6, 1, 8, 4, 9, 7, 3],
+            [1, 7, 9, 3, 2, 6, 8, 4, 5],
+            [8, 4, 5, 2, 1, 9, 3, 6, 7],
+            [9, 1, 3, 7, 6, 8, 5, 2, 4],
+            [6, 2, 7, 4, 3, 5, 1, 9, 8]
+        ]
+    },
+    {
+        puzzle: [
+            [0, 0, 5, 2, 0, 9, 7, 0, 0],
+            [6, 0, 0, 0, 7, 0, 0, 0, 3],
+            [0, 9, 0, 0, 0, 0, 0, 6, 0],
+            [0, 0, 6, 0, 9, 0, 3, 0, 0],
+            [3, 7, 0, 0, 0, 0, 0, 1, 5],
+            [0, 0, 1, 0, 4, 0, 6, 0, 0],
+            [0, 1, 0, 0, 0, 0, 0, 7, 0],
+            [2, 0, 0, 0, 5, 0, 0, 0, 6],
+            [0, 0, 3, 4, 0, 8, 2, 0, 0]
+        ],
+        solution: [
+            [4, 3, 5, 2, 6, 9, 7, 8, 1],
+            [6, 8, 2, 5, 7, 1, 4, 9, 3],
+            [1, 9, 7, 8, 3, 4, 5, 6, 2],
+            [8, 2, 6, 1, 9, 5, 3, 4, 7],
+            [3, 7, 4, 6, 8, 2, 9, 1, 5],
+            [9, 5, 1, 7, 4, 3, 6, 2, 8],
+            [5, 1, 9, 3, 2, 6, 8, 7, 4],
+            [2, 4, 8, 9, 5, 7, 1, 3, 6],
+            [7, 6, 3, 4, 1, 8, 2, 5, 9]
+        ]
+    },
+    {
+        puzzle: [
+            [0, 3, 0, 0, 0, 0, 0, 1, 0],
+            [6, 0, 0, 0, 9, 0, 0, 0, 8],
+            [0, 0, 8, 3, 0, 2, 5, 0, 0],
+            [0, 5, 0, 0, 0, 0, 0, 2, 0],
+            [4, 0, 0, 0, 5, 0, 0, 0, 1],
+            [0, 1, 0, 0, 0, 0, 0, 5, 0],
+            [0, 0, 1, 5, 0, 7, 2, 0, 0],
+            [2, 0, 0, 0, 1, 0, 0, 0, 5],
+            [0, 4, 0, 0, 0, 0, 0, 7, 0]
+        ],
+        solution: [
+            [5, 3, 4, 6, 7, 8, 9, 1, 2],
+            [6, 7, 2, 1, 9, 5, 3, 4, 8],
+            [1, 9, 8, 3, 4, 2, 5, 6, 7],
+            [8, 5, 9, 7, 6, 1, 4, 2, 3],
+            [4, 2, 6, 8, 5, 3, 7, 9, 1],
+            [7, 1, 3, 9, 2, 4, 8, 5, 6],
+            [9, 6, 1, 5, 3, 7, 2, 8, 4],
+            [2, 8, 7, 4, 1, 9, 6, 3, 5],
+            [3, 4, 5, 2, 8, 6, 1, 7, 9]
         ]
     }
 ];
