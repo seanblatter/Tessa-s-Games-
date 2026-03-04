@@ -3,9 +3,10 @@
 let firebase = null;
 let currentUser = null;
 let authMode = 'signin';
-const games = ['wordle', 'pixel', 'lights', 'mirror'];
+const games = ['wordle', 'sudoku', 'pixel', 'lights', 'mirror'];
 const gameLabels = {
     wordle: 'Wordle',
+    sudoku: 'Sudoku',
     pixel: 'Pixel Patterns',
     lights: 'Lights Out 9x9',
     mirror: 'Mirror Mosaic'
@@ -156,6 +157,9 @@ function showGame(gameName) {
     switch (gameName) {
         case 'wordle':
             initWordle();
+            break;
+        case 'sudoku':
+            initSudoku();
             break;
         case 'pixel':
             initPixelGame();
@@ -442,7 +446,7 @@ async function loadDailyScores() {
         const displayValue = (() => {
             if (!data) return '—';
             if (game === 'wordle') return data.wordlePattern || '—';
-            if (game === 'pixel' || game === 'lights' || game === 'mirror') return formatDuration(data.durationSeconds);
+            if (game === 'sudoku' || game === 'pixel' || game === 'lights' || game === 'mirror') return formatDuration(data.durationSeconds);
             return data.score ?? '—';
         })();
         const row = document.createElement('div');
