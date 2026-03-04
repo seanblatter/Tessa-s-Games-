@@ -17,7 +17,7 @@
             <div class="landing-content">
                 <div class="landing-card">
                     <h2>Daily puzzles made for you</h2>
-                    <p>Jump into Wordle, Sudoku, plus three new 9x9 pattern challenges designed for fun, focus, and friendly competition.</p>
+                    <p>Jump into Wordle and Sudoku challenges designed for fun, focus, and friendly competition.</p>
                 </div>
                 <div class="landing-card">
                     <h2>Track your streaks</h2>
@@ -106,21 +106,6 @@
                     <span class="game-name">Sudoku</span>
                     <span class="game-desc">Classic 9x9 number puzzle</span>
                 </button>
-                <button class="game-button" onclick="showGame('pixel')">
-                    <span class="game-icon">🧩</span>
-                    <span class="game-name">Pixel Patterns</span>
-                    <span class="game-desc">Match a hidden 9x9 pattern</span>
-                </button>
-                <button class="game-button" onclick="showGame('lights')">
-                    <span class="game-icon">💡</span>
-                    <span class="game-name">Lights Out 9x9</span>
-                    <span class="game-desc">Cross-toggle into the target</span>
-                </button>
-                <button class="game-button" onclick="showGame('mirror')">
-                    <span class="game-icon">🪞</span>
-                    <span class="game-name">Mirror Mosaic</span>
-                    <span class="game-desc">Build symmetrical 9x9 art</span>
-                </button>
             </div>
         </div>
 
@@ -145,9 +130,6 @@
                 <div class="score-game-tabs" role="tablist" aria-label="Select game">
                     <button class="score-game-card active" data-game="wordle" type="button">Wordle</button>
                     <button class="score-game-card" data-game="sudoku" type="button">Sudoku</button>
-                    <button class="score-game-card" data-game="pixel" type="button">Pixel Patterns</button>
-                    <button class="score-game-card" data-game="lights" type="button">Lights Out 9x9</button>
-                    <button class="score-game-card" data-game="mirror" type="button">Mirror Mosaic</button>
                 </div>
                 <div class="scores-toggle" role="group" aria-label="Score range">
                     <button class="toggle-button active" data-mode="daily" type="button">Daily</button>
@@ -233,53 +215,11 @@
             </div>
         </div>
 
-        <!-- Pixel Patterns Game -->
-        <div id="pixel-screen" class="screen">
-            <div class="game-header">
-                <button class="back-button" onclick="showMenu()">← Back</button>
-                <h2>Pixel Patterns</h2>
-                <button class="new-game-button" data-game="pixel" onclick="newPixelGame()">New Game</button>
-            </div>
-            <div class="nine-grid-game">
-                <button class="secondary-button" onclick="showTargetPreview('pixel')">Peek Target</button>
-                <div id="pixel-board"></div>
-                <div id="pixel-message" class="message"></div>
-            </div>
-        </div>
-
-        <!-- Lights Out Game -->
-        <div id="lights-screen" class="screen">
-            <div class="game-header">
-                <button class="back-button" onclick="showMenu()">← Back</button>
-                <h2>Lights Out 9x9</h2>
-                <button class="new-game-button" data-game="lights" onclick="newLightsGame()">New Game</button>
-            </div>
-            <div class="nine-grid-game">
-                <button class="secondary-button" onclick="showTargetPreview('lights')">Peek Target</button>
-                <div id="lights-board"></div>
-                <div id="lights-message" class="message"></div>
-            </div>
-        </div>
-
-        <!-- Mirror Mosaic Game -->
-        <div id="mirror-screen" class="screen">
-            <div class="game-header">
-                <button class="back-button" onclick="showMenu()">← Back</button>
-                <h2>Mirror Mosaic</h2>
-                <button class="new-game-button" data-game="mirror" onclick="newMirrorGame()">New Game</button>
-            </div>
-            <div class="nine-grid-game">
-                <button class="secondary-button" onclick="showTargetPreview('mirror')">Peek Target</button>
-                <div id="mirror-board"></div>
-                <div id="mirror-message" class="message"></div>
-            </div>
-        </div>
     </div>
 
     <script src="data.js"></script>
     <script src="wordle.js"></script>
     <script src="sudoku.js"></script>
-    <script src="grid-games.js"></script>
     <script type="module">
       // Import the functions you need from the SDKs you need
       import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";

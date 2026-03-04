@@ -36,8 +36,7 @@ function newWordleGame() {
     createWordleBoard();
     createWordleKeyboard();
     clearMessage('wordle');
-    
-    console.log('Target word:', wordleState.targetWord); // Debug only
+
 }
 
 function createWordleBoard() {
