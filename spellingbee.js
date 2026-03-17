@@ -73,6 +73,26 @@ function newSpellingBeeGame() {
     clearMessage('spellingbee');
 }
 
+async function endSpellingBeeGame() {
+    if (beeState.gameOver) return;
+
+    beeState.gameOver = true;
+    beeState.currentWord = '';
+    renderBeeEntry();
+
+    const durationSeconds = Math.round((Date.now() - beeState.startTime) / 1000);
+
+    if (window.recordScore) {
+        await window.recordScore('spellingbee', {
+            durationSeconds,
+            wordsFound: beeState.foundWords.size,
+            score: beeState.score
+        });
+    }
+
+    showMessage('spellingbee', `Game ended. Final score: ${beeState.score}.`, 'info');
+}
+
 function pointsForBeeWord(word) {
     return word.length === 4 ? 1 : word.length;
 }
@@ -233,6 +253,12 @@ async function submitBeeWord() {
         const valid = await isDictionaryWord(word);
         beeState.isSubmitting = false;
 
+        if (beeState.gameOver) {
+            beeState.currentWord = '';
+            renderBeeEntry();
+            return;
+        }
+
         if (!valid) {
             showMessage('spellingbee', 'Not a valid dictionary word.', 'error');
             pulseBeeEntry('bad');
@@ -247,7 +273,7 @@ async function submitBeeWord() {
 
             if (window.recordScore) {
                 const durationSeconds = Math.round((Date.now() - beeState.startTime) / 1000);
-                window.recordScore('spellingbee', {
+                await window.recordScore('spellingbee', {
                     durationSeconds,
                     wordsFound: beeState.foundWords.size,
                     score: beeState.score
@@ -265,6 +291,8 @@ document.addEventListener('keydown', (e) => {
 
     if (e.key === 'Enter') {
         submitBeeWord();
+    } else if (e.key === 'Escape') {
+        endSpellingBeeGame();
     } else if (e.key === 'Backspace' || e.key === 'Delete') {
         deleteBeeLetter();
     } else if (/^[a-zA-Z]$/.test(e.key)) {
