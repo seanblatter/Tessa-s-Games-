@@ -102,6 +102,11 @@
                     <span class="game-name">Wordle</span>
                     <span class="game-desc">Guess the special word</span>
                 </button>
+                <button class="game-button" onclick="showGame('spellingbee')">
+                    <span class="game-icon">🐝</span>
+                    <span class="game-name">Spelling Bee</span>
+                    <span class="game-desc">Build words with the center letter</span>
+                </button>
                 <button class="game-button" onclick="showGame('sudoku')">
                     <span class="game-icon">🔢</span>
                     <span class="game-name">Sudoku</span>
@@ -130,6 +135,7 @@
             <div class="panel">
                 <div class="score-game-tabs" role="tablist" aria-label="Select game">
                     <button class="score-game-card active" data-game="wordle" type="button">Wordle</button>
+                    <button class="score-game-card" data-game="spellingbee" type="button">Spelling Bee</button>
                     <button class="score-game-card" data-game="sudoku" type="button">Sudoku</button>
                 </div>
                 <div class="scores-toggle" role="group" aria-label="Score range">
@@ -216,10 +222,45 @@
             </div>
         </div>
 
+        <!-- Spelling Bee Game -->
+        <div id="spellingbee-screen" class="screen">
+            <div class="game-header">
+                <button class="back-button" onclick="showMenu()">← Back</button>
+                <h2>Spelling Bee</h2>
+                <button class="new-game-button" data-game="spellingbee" onclick="newSpellingBeeGame()">New Game</button>
+            </div>
+            <div id="spellingbee-game">
+                <p class="bee-hint">Create words with the hive letters. Words must be 4+ letters and include the center letter.</p>
+
+                <div id="bee-score-row" aria-label="Spelling Bee stats">
+                    <div class="bee-stat"><strong>Score</strong><span id="bee-score">0</span></div>
+                    <div class="bee-stat"><strong>Found</strong><span id="bee-found-count">0</span></div>
+                    <div class="bee-stat"><strong>Total</strong><span id="bee-total-count">0</span></div>
+                </div>
+
+                <div id="bee-entry" aria-live="polite">—</div>
+
+                <div id="bee-board" aria-label="Spelling Bee hive"></div>
+
+                <div class="bee-controls">
+                    <button class="control-button" type="button" onclick="shuffleBeeLetters()">Shuffle</button>
+                    <button class="control-button" type="button" onclick="deleteBeeLetter()">Delete</button>
+                    <button class="control-button bee-enter-button" type="button" onclick="submitBeeWord()">Enter</button>
+                </div>
+
+                <div class="bee-found-panel">
+                    <h3>Found Words</h3>
+                    <div id="bee-found-words" class="bee-found-words"></div>
+                </div>
+                <div id="spellingbee-message" class="message"></div>
+            </div>
+        </div>
+
     </div>
 
     <script src="data.js"></script>
     <script src="wordle.js"></script>
+    <script src="spellingbee.js"></script>
     <script src="sudoku.js"></script>
     <script type="module">
       // Import the functions you need from the SDKs you need

@@ -3,9 +3,10 @@
 let firebase = null;
 let currentUser = null;
 let authMode = 'signin';
-const games = ['wordle', 'sudoku'];
+const games = ['wordle', 'spellingbee', 'sudoku'];
 const gameLabels = {
     wordle: 'Wordle',
+    spellingbee: 'Spelling Bee',
     sudoku: 'Sudoku'
 };
 let dailyScoresCache = {};
@@ -157,6 +158,9 @@ function showGame(gameName) {
             break;
         case 'sudoku':
             initSudoku();
+            break;
+        case 'spellingbee':
+            initSpellingBee();
             break;
     }
 }
@@ -386,6 +390,9 @@ function scoreForGame(game, details) {
         const attempts = details.attempts || 6;
         return Math.max(10, 100 - (attempts - 1) * 15);
     }
+    if (game === 'spellingbee') {
+        return details.score || 0;
+    }
     const duration = details.durationSeconds || 0;
     return Math.max(10, 120 - Math.round(duration));
 }
@@ -408,6 +415,7 @@ async function recordScore(game, details = {}) {
         attempts: details.attempts || null,
         durationSeconds: details.durationSeconds || null,
         wordlePattern: details.wordlePattern || null,
+        wordsFound: details.wordsFound || null,
         updatedAt: firebase.serverTimestamp()
     }, { merge: true });
     await loadDailyScores();
@@ -434,6 +442,7 @@ async function loadDailyScores() {
         const displayValue = (() => {
             if (!data) return '—';
             if (game === 'wordle') return data.wordlePattern || '—';
+            if (game === 'spellingbee') return `${data.wordsFound || 0} words`;
             if (game === 'sudoku') return formatDuration(data.durationSeconds);
             return data.score ?? '—';
         })();

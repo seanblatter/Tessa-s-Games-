@@ -1,6 +1,6 @@
 # 💝 Tessa's Games 💝
 
-A beautiful, mobile-friendly web application featuring two classic games customized for Tessa: Wordle and Sudoku.
+A beautiful, mobile-friendly web application featuring three classic games customized for Tessa: Wordle, Spelling Bee, and Sudoku.
 
 ## 🎮 Games Included
 
@@ -10,6 +10,11 @@ A beautiful, mobile-friendly web application featuring two classic games customi
 - Expanded word list for more variety
 - On-screen keyboard for mobile devices
 - Physical keyboard support
+
+### Spelling Bee
+- Build words using seven hive letters with a required center letter
+- Word validation, pangram bonus scoring, and found-word tracking
+- Shuffle, delete, enter controls plus physical keyboard support
 
 ### Sudoku (9x9)
 - Classic 9x9 number puzzle gameplay
