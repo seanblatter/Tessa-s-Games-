@@ -3,27 +3,31 @@
 const spellingBeePuzzles = [
     {
         center: 'E',
-        outer: ['A', 'R', 'S', 'T', 'L', 'P'],
-        words: [
-            'ASTER', 'LEAPS', 'LEAPT', 'LEAST', 'PASTE', 'PASTEL',
-            'PEARL', 'PEARS', 'PETAL', 'PETALS', 'PLASTER', 'PLATE',
-            'PLATES', 'PLEAT', 'PLEATS', 'REAPS', 'RATES', 'SLATE',
-            'SPARE', 'SPEAR', 'STALE', 'STAPLE', 'STAPLER', 'STARE',
-            'STEAL', 'TEARS'
-        ]
+        outer: ['A', 'R', 'S', 'T', 'L', 'P']
     }
 ];
 
 const beeSlots = ['top', 'top-right', 'bottom-right', 'bottom', 'bottom-left', 'top-left'];
+
+// Fast local fallback + common words users expect.
+const localBeeDictionary = new Set([
+    'able', 'alert', 'alter', 'apple', 'are', 'ear', 'earn', 'easter', 'eat', 'eats',
+    'eel', 'else', 'late', 'later', 'least', 'let', 'lets', 'pear', 'pearl',
+    'pears', 'peat', 'petal', 'plate', 'pleat', 'rate', 'rates', 'real', 'rear', 'sale',
+    'seal', 'sear', 'slate', 'stale', 'staple', 'star', 'stare', 'steal', 'tear', 'tears',
+    'teal', 'tree', 'treat'
+]);
+
+const dictionaryCache = new Map();
 
 let beeState = {
     puzzle: null,
     currentWord: '',
     foundWords: new Set(),
     score: 0,
-    maxScore: 0,
     startTime: null,
-    gameOver: false
+    gameOver: false,
+    isSubmitting: false
 };
 
 function initSpellingBee() {
@@ -39,8 +43,7 @@ function newSpellingBeeGame() {
     const basePuzzle = spellingBeePuzzles[Math.floor(Math.random() * spellingBeePuzzles.length)];
     const puzzle = {
         center: basePuzzle.center,
-        outer: basePuzzle.outer.slice(),
-        words: basePuzzle.words.slice()
+        outer: basePuzzle.outer.slice()
     };
 
     beeState = {
@@ -48,9 +51,9 @@ function newSpellingBeeGame() {
         currentWord: '',
         foundWords: new Set(),
         score: 0,
-        maxScore: puzzle.words.reduce((total, word) => total + pointsForBeeWord(word, puzzle), 0),
         startTime: Date.now(),
-        gameOver: false
+        gameOver: false,
+        isSubmitting: false
     };
 
     renderBeeBoard();
@@ -60,11 +63,8 @@ function newSpellingBeeGame() {
     clearMessage('spellingbee');
 }
 
-function pointsForBeeWord(word, puzzle = beeState.puzzle) {
-    const base = word.length === 4 ? 1 : word.length;
-    const letterSet = new Set([puzzle.center, ...puzzle.outer]);
-    const isPangram = [...letterSet].every((letter) => word.includes(letter));
-    return base + (isPangram ? 7 : 0);
+function pointsForBeeWord(word) {
+    return word.length === 4 ? 1 : word.length;
 }
 
 function pulseBeeEntry(type) {
@@ -110,9 +110,9 @@ function renderBeeEntry() {
 }
 
 function renderBeeStats() {
-    document.getElementById('bee-score').textContent = `${beeState.score}/${beeState.maxScore}`;
-    document.getElementById('bee-found-count').textContent = beeState.foundWords.size;
-    document.getElementById('bee-total-count').textContent = beeState.puzzle.words.length;
+    document.getElementById('bee-score').textContent = String(beeState.score);
+    document.getElementById('bee-found-count').textContent = String(beeState.foundWords.size);
+    document.getElementById('bee-total-count').textContent = 'Dictionary';
 }
 
 function renderBeeFoundWords() {
@@ -146,8 +146,30 @@ function shuffleBeeLetters() {
     renderBeeBoard();
 }
 
-function submitBeeWord() {
-    if (beeState.gameOver) return;
+async function isDictionaryWord(word) {
+    const lower = word.toLowerCase();
+    if (dictionaryCache.has(lower)) return dictionaryCache.get(lower);
+    if (localBeeDictionary.has(lower)) {
+        dictionaryCache.set(lower, true);
+        return true;
+    }
+
+    try {
+        const response = await fetch(`https://api.datamuse.com/words?sp=${encodeURIComponent(lower)}&max=1`);
+        if (!response.ok) throw new Error('Dictionary request failed');
+        const data = await response.json();
+        const isValid = Array.isArray(data) && data.length > 0 && data[0].word === lower;
+        dictionaryCache.set(lower, isValid);
+        return isValid;
+    } catch (error) {
+        // Network fallback: be strict with local known words only.
+        dictionaryCache.set(lower, false);
+        return false;
+    }
+}
+
+async function submitBeeWord() {
+    if (beeState.gameOver || beeState.isSubmitting) return;
 
     const word = beeState.currentWord.toUpperCase();
     const allowed = new Set([beeState.puzzle.center, ...beeState.puzzle.outer]);
@@ -161,24 +183,26 @@ function submitBeeWord() {
     } else if ([...word].some((letter) => !allowed.has(letter))) {
         showMessage('spellingbee', 'Word uses letters outside the hive.', 'error');
         pulseBeeEntry('bad');
-    } else if (!beeState.puzzle.words.includes(word)) {
-        showMessage('spellingbee', 'Not in this puzzle\'s dictionary.', 'error');
-        pulseBeeEntry('bad');
     } else if (beeState.foundWords.has(word)) {
         showMessage('spellingbee', 'Already found.', 'info');
         pulseBeeEntry('bad');
     } else {
-        const points = pointsForBeeWord(word);
-        beeState.foundWords.add(word);
-        beeState.score += points;
-        showMessage('spellingbee', `Great! +${points} points`, 'success');
-        pulseBeeEntry('good');
-        renderBeeStats();
-        renderBeeFoundWords();
+        beeState.isSubmitting = true;
+        const valid = await isDictionaryWord(word);
+        beeState.isSubmitting = false;
 
-        if (beeState.foundWords.size === beeState.puzzle.words.length) {
-            beeState.gameOver = true;
-            showMessage('spellingbee', '🐝 Amazing! You found every word!', 'success');
+        if (!valid) {
+            showMessage('spellingbee', 'Not a valid dictionary word.', 'error');
+            pulseBeeEntry('bad');
+        } else {
+            const points = pointsForBeeWord(word);
+            beeState.foundWords.add(word);
+            beeState.score += points;
+            showMessage('spellingbee', `Great! +${points} points`, 'success');
+            pulseBeeEntry('good');
+            renderBeeStats();
+            renderBeeFoundWords();
+
             if (window.recordScore) {
                 const durationSeconds = Math.round((Date.now() - beeState.startTime) / 1000);
                 window.recordScore('spellingbee', {
