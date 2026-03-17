@@ -154,18 +154,49 @@ async function isDictionaryWord(word) {
         return true;
     }
 
+    let hadNetworkFailure = false;
+    const verdicts = [];
+
+    // Source 1: Datamuse (exact word match in returned candidates).
     try {
-        const response = await fetch(`https://api.datamuse.com/words?sp=${encodeURIComponent(lower)}&max=1`);
-        if (!response.ok) throw new Error('Dictionary request failed');
-        const data = await response.json();
-        const isValid = Array.isArray(data) && data.length > 0 && data[0].word === lower;
-        dictionaryCache.set(lower, isValid);
-        return isValid;
+        const response = await fetch(`https://api.datamuse.com/words?sp=${encodeURIComponent(lower)}&max=50`);
+        if (!response.ok) {
+            hadNetworkFailure = true;
+        } else {
+            const data = await response.json();
+            const found = Array.isArray(data) && data.some((item) => item.word === lower);
+            verdicts.push(found);
+        }
     } catch (error) {
-        // Network fallback: be strict with local known words only.
-        dictionaryCache.set(lower, false);
-        return false;
+        hadNetworkFailure = true;
     }
+
+    // Source 2: Free Dictionary API.
+    try {
+        const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(lower)}`);
+        if (response.ok) {
+            verdicts.push(true);
+        } else if (response.status === 404) {
+            verdicts.push(false);
+        } else {
+            hadNetworkFailure = true;
+        }
+    } catch (error) {
+        hadNetworkFailure = true;
+    }
+
+    let isValid = false;
+    if (verdicts.includes(true)) {
+        isValid = true;
+    } else if (verdicts.length > 0 && verdicts.every((v) => v === false)) {
+        isValid = false;
+    } else if (hadNetworkFailure) {
+        // Fail open on network issues to avoid false rejections in gameplay.
+        isValid = true;
+    }
+
+    dictionaryCache.set(lower, isValid);
+    return isValid;
 }
 
 async function submitBeeWord() {
@@ -188,6 +219,7 @@ async function submitBeeWord() {
         pulseBeeEntry('bad');
     } else {
         beeState.isSubmitting = true;
+        showMessage('spellingbee', 'Checking dictionary…', 'info');
         const valid = await isDictionaryWord(word);
         beeState.isSubmitting = false;
 
