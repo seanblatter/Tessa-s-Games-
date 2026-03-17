@@ -1,10 +1,16 @@
 // Spelling Bee game logic
 
 const spellingBeePuzzles = [
-    {
-        center: 'E',
-        outer: ['A', 'R', 'S', 'T', 'L', 'P']
-    }
+    { center: 'E', outer: ['A', 'R', 'S', 'T', 'L', 'P'] },
+    { center: 'A', outer: ['R', 'C', 'D', 'M', 'N', 'T'] },
+    { center: 'O', outer: ['B', 'L', 'M', 'N', 'R', 'T'] },
+    { center: 'I', outer: ['B', 'E', 'L', 'N', 'S', 'T'] },
+    { center: 'U', outer: ['B', 'D', 'E', 'L', 'R', 'T'] },
+    { center: 'E', outer: ['B', 'D', 'I', 'N', 'R', 'T'] },
+    { center: 'A', outer: ['B', 'E', 'L', 'P', 'R', 'T'] },
+    { center: 'O', outer: ['C', 'D', 'E', 'L', 'N', 'R'] },
+    { center: 'I', outer: ['A', 'C', 'L', 'N', 'R', 'T'] },
+    { center: 'E', outer: ['C', 'L', 'M', 'N', 'R', 'T'] }
 ];
 
 const beeSlots = ['top', 'top-right', 'bottom-right', 'bottom', 'bottom-left', 'top-left'];
@@ -19,6 +25,8 @@ const localBeeDictionary = new Set([
 ]);
 
 const dictionaryCache = new Map();
+
+let lastPuzzleIndex = -1;
 
 let beeState = {
     puzzle: null,
@@ -35,12 +43,14 @@ function initSpellingBee() {
 }
 
 function newSpellingBeeGame() {
-    if (window.canPlayDailyGame && !window.canPlayDailyGame('spellingbee')) {
-        beeState.gameOver = true;
-        return;
+    // Spelling Bee supports replay with new letter hives, so don't lock by daily-play checks.
+    let nextIndex = Math.floor(Math.random() * spellingBeePuzzles.length);
+    if (spellingBeePuzzles.length > 1 && nextIndex == lastPuzzleIndex) {
+        nextIndex = (nextIndex + 1 + Math.floor(Math.random() * (spellingBeePuzzles.length - 1))) % spellingBeePuzzles.length;
     }
+    lastPuzzleIndex = nextIndex;
 
-    const basePuzzle = spellingBeePuzzles[Math.floor(Math.random() * spellingBeePuzzles.length)];
+    const basePuzzle = spellingBeePuzzles[nextIndex];
     const puzzle = {
         center: basePuzzle.center,
         outer: basePuzzle.outer.slice()
