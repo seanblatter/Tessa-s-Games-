@@ -42,7 +42,19 @@ function initSpellingBee() {
     newSpellingBeeGame();
 }
 
-function newSpellingBeeGame() {
+async function saveSpellingBeeScore(details) {
+    if (!window.recordScore) return;
+    await window.recordScore('spellingbee', details);
+}
+
+async function newSpellingBeeGame() {
+    if (beeState.startTime && !beeState.gameOver) {
+        await endSpellingBeeGame({
+            silent: true,
+            message: 'Previous game saved. Starting a new hive!'
+        });
+    }
+
     // Spelling Bee supports replay with new letter hives, so don't lock by daily-play checks.
     let nextIndex = Math.floor(Math.random() * spellingBeePuzzles.length);
     if (spellingBeePuzzles.length > 1 && nextIndex == lastPuzzleIndex) {
@@ -73,7 +85,8 @@ function newSpellingBeeGame() {
     clearMessage('spellingbee');
 }
 
-async function endSpellingBeeGame() {
+async function endSpellingBeeGame(options = {}) {
+    const { silent = false, message = `Game ended. Final score: ${beeState.score}.` } = options;
     if (beeState.gameOver) return;
 
     beeState.gameOver = true;
@@ -82,15 +95,15 @@ async function endSpellingBeeGame() {
 
     const durationSeconds = Math.round((Date.now() - beeState.startTime) / 1000);
 
-    if (window.recordScore) {
-        await window.recordScore('spellingbee', {
-            durationSeconds,
-            wordsFound: beeState.foundWords.size,
-            score: beeState.score
-        });
-    }
+    await saveSpellingBeeScore({
+        durationSeconds,
+        wordsFound: beeState.foundWords.size,
+        score: beeState.score
+    });
 
-    showMessage('spellingbee', `Game ended. Final score: ${beeState.score}.`, 'info');
+    if (!silent) {
+        showMessage('spellingbee', message, 'info');
+    }
 }
 
 function pointsForBeeWord(word) {
@@ -271,14 +284,12 @@ async function submitBeeWord() {
             renderBeeStats();
             renderBeeFoundWords();
 
-            if (window.recordScore) {
-                const durationSeconds = Math.round((Date.now() - beeState.startTime) / 1000);
-                await window.recordScore('spellingbee', {
-                    durationSeconds,
-                    wordsFound: beeState.foundWords.size,
-                    score: beeState.score
-                });
-            }
+            const durationSeconds = Math.round((Date.now() - beeState.startTime) / 1000);
+            await saveSpellingBeeScore({
+                durationSeconds,
+                wordsFound: beeState.foundWords.size,
+                score: beeState.score
+            });
         }
     }
 
