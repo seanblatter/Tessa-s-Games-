@@ -419,6 +419,10 @@ async function recordScore(game, details = {}) {
         updatedAt: firebase.serverTimestamp()
     }, { merge: true });
     await loadDailyScores();
+    const scoresScreen = document.getElementById('scores-screen');
+    if (scoresScreen?.classList.contains('active')) {
+        await loadLeaderboards(selectedScoresGame, scoresMode);
+    }
 }
 
 async function loadDailyScores() {
