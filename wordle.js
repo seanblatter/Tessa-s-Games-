@@ -196,6 +196,13 @@ function checkWordleGuess(guess) {
             showMessage('wordle', '🎉 Congratulations! You found the word!', 'success');
             if (window.recordScore) {
                 const durationSeconds = Math.round((Date.now() - wordleState.startTime) / 1000);
+                if (window.lockDailyGameNow) {
+                    window.lockDailyGameNow('wordle', {
+                        attempts: wordleState.currentRow + 1,
+                        durationSeconds,
+                        wordlePattern: wordleState.lastPattern
+                    });
+                }
                 window.recordScore('wordle', {
                     attempts: wordleState.currentRow + 1,
                     durationSeconds,
@@ -209,6 +216,13 @@ function checkWordleGuess(guess) {
             showMessage('wordle', `Game Over! The word was ${wordleState.targetWord}`, 'error');
             if (window.recordScore) {
                 const durationSeconds = Math.round((Date.now() - wordleState.startTime) / 1000);
+                if (window.lockDailyGameNow) {
+                    window.lockDailyGameNow('wordle', {
+                        attempts: wordleState.currentRow + 1,
+                        durationSeconds,
+                        wordlePattern: wordleState.lastPattern
+                    });
+                }
                 window.recordScore('wordle', {
                     attempts: wordleState.currentRow + 1,
                     durationSeconds,

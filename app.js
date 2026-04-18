@@ -373,6 +373,39 @@ function formatGameLabel(game) {
     return gameLabels[game] || game;
 }
 
+function buildDailyCacheEntry(game, details = {}, date = getTodayKey()) {
+    return {
+        game,
+        date,
+        score: scoreForGame(game, details),
+        attempts: details.attempts || null,
+        durationSeconds: details.durationSeconds || null,
+        wordlePattern: details.wordlePattern || null,
+        wordsFound: details.wordsFound || null
+    };
+}
+
+function renderDailyScoresFromCache() {
+    const container = document.getElementById('dropdown-scores');
+    if (!container) return;
+    container.innerHTML = '';
+    games.forEach((game) => {
+        const data = dailyScoresCache[game];
+        const displayValue = (() => {
+            if (!data) return '—';
+            if (game === 'wordle') return data.wordlePattern || '—';
+            if (game === 'spellingbee') return `${data.wordsFound || 0} words`;
+            if (game === 'sudoku') return formatDuration(data.durationSeconds);
+            return data.score ?? '—';
+        })();
+        const row = document.createElement('div');
+        row.className = 'score-row';
+        row.innerHTML = `<span>${formatGameLabel(game)}</span><span>${displayValue}</span>`;
+        container.appendChild(row);
+    });
+    updateDailyGameLockUI();
+}
+
 function setScoresMode(mode) {
     scoresMode = mode;
     document.querySelectorAll('.toggle-button').forEach((button) => {
@@ -408,6 +441,8 @@ async function recordScore(game, details = {}) {
         return;
     }
     const score = scoreForGame(game, details);
+    dailyScoresCache[game] = buildDailyCacheEntry(game, details, date);
+    renderDailyScoresFromCache();
     const scoreRef = firebase.doc(firebase.db, 'scores', `${currentUser.uid}_${game}_${date}`);
     const userRef = firebase.doc(firebase.db, 'users', currentUser.uid);
     const userSnap = await firebase.getDoc(userRef);
@@ -425,16 +460,8 @@ async function recordScore(game, details = {}) {
         wordsFound: details.wordsFound || null,
         updatedAt: firebase.serverTimestamp()
     }, { merge: true });
-    dailyScoresCache[game] = {
-        game,
-        date,
-        score,
-        attempts: details.attempts || null,
-        durationSeconds: details.durationSeconds || null,
-        wordlePattern: details.wordlePattern || null,
-        wordsFound: details.wordsFound || null
-    };
-    updateDailyGameLockUI();
+    dailyScoresCache[game] = buildDailyCacheEntry(game, details, date);
+    renderDailyScoresFromCache();
     await loadDailyScores();
     const scoresScreen = document.getElementById('scores-screen');
     if (scoresScreen?.classList.contains('active')) {
@@ -456,23 +483,7 @@ async function loadDailyScores() {
         scores[docSnap.data().game] = docSnap.data();
     });
     dailyScoresCache = scores;
-    const container = document.getElementById('dropdown-scores');
-    container.innerHTML = '';
-    games.forEach((game) => {
-        const data = scores[game];
-        const displayValue = (() => {
-            if (!data) return '—';
-            if (game === 'wordle') return data.wordlePattern || '—';
-            if (game === 'spellingbee') return `${data.wordsFound || 0} words`;
-            if (game === 'sudoku') return formatDuration(data.durationSeconds);
-            return data.score ?? '—';
-        })();
-        const row = document.createElement('div');
-        row.className = 'score-row';
-        row.innerHTML = `<span>${formatGameLabel(game)}</span><span>${displayValue}</span>`;
-        container.appendChild(row);
-    });
-    updateDailyGameLockUI();
+    renderDailyScoresFromCache();
 }
 
 async function loadLeaderboards(game, mode = 'daily') {
@@ -864,3 +875,7 @@ window.canPlayDailyGame = async (game) => {
 
 window.recordScore = recordScore;
 window.getCurrentUser = () => currentUser;
+window.lockDailyGameNow = (game, details = {}) => {
+    dailyScoresCache[game] = buildDailyCacheEntry(game, details, getTodayKey());
+    renderDailyScoresFromCache();
+};

@@ -90,20 +90,28 @@ async function endSpellingBeeGame(options = {}) {
     if (beeState.gameOver) return;
 
     beeState.gameOver = true;
+    beeState.isSubmitting = false;
     beeState.currentWord = '';
     renderBeeEntry();
 
     const durationSeconds = Math.round((Date.now() - beeState.startTime) / 1000);
-
-    await saveSpellingBeeScore({
+    const finalDetails = {
         durationSeconds,
         wordsFound: beeState.foundWords.size,
         score: beeState.score
-    });
+    };
+
+    if (window.lockDailyGameNow) {
+        window.lockDailyGameNow('spellingbee', finalDetails);
+    }
 
     if (!silent) {
         showMessage('spellingbee', message, 'info');
     }
+
+    saveSpellingBeeScore(finalDetails).catch(() => {
+        showMessage('spellingbee', 'Saved locally. Syncing score when connection is ready.', 'info');
+    });
 }
 
 function pointsForBeeWord(word) {
