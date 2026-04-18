@@ -16,8 +16,8 @@ function initWordle() {
     createWordleKeyboard();
 }
 
-function newWordleGame() {
-    if (window.canPlayDailyGame && !window.canPlayDailyGame('wordle')) {
+async function newWordleGame() {
+    if (window.canPlayDailyGame && !(await window.canPlayDailyGame('wordle'))) {
         wordleState.gameOver = true;
         return;
     }

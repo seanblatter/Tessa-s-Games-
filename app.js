@@ -355,7 +355,11 @@ function closeMenuDropdown() {
 
 // Scores and leaderboard
 function getTodayKey() {
-    return new Date().toISOString().split('T')[0];
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
 }
 
 function formatDuration(durationSeconds) {
@@ -400,6 +404,9 @@ function scoreForGame(game, details) {
 async function recordScore(game, details = {}) {
     if (!firebase || !currentUser) return;
     const date = getTodayKey();
+    if (dailyScoresCache[game] && game !== 'spellingbee') {
+        return;
+    }
     const score = scoreForGame(game, details);
     const scoreRef = firebase.doc(firebase.db, 'scores', `${currentUser.uid}_${game}_${date}`);
     const userRef = firebase.doc(firebase.db, 'users', currentUser.uid);
@@ -418,6 +425,16 @@ async function recordScore(game, details = {}) {
         wordsFound: details.wordsFound || null,
         updatedAt: firebase.serverTimestamp()
     }, { merge: true });
+    dailyScoresCache[game] = {
+        game,
+        date,
+        score,
+        attempts: details.attempts || null,
+        durationSeconds: details.durationSeconds || null,
+        wordlePattern: details.wordlePattern || null,
+        wordsFound: details.wordsFound || null
+    };
+    updateDailyGameLockUI();
     await loadDailyScores();
     const scoresScreen = document.getElementById('scores-screen');
     if (scoresScreen?.classList.contains('active')) {
@@ -460,42 +477,59 @@ async function loadDailyScores() {
 
 async function loadLeaderboards(game, mode = 'daily') {
     if (!firebase) return;
-    document.getElementById('global-leaderboard').innerHTML = '';
-    document.getElementById('friends-leaderboard').innerHTML = '';
+    const globalEl = document.getElementById('global-leaderboard');
+    const friendsEl = document.getElementById('friends-leaderboard');
+    globalEl.innerHTML = '<li>Loading…</li>';
+    friendsEl.innerHTML = '<li>Loading…</li>';
 
-    const scoresRef = firebase.collection(firebase.db, 'scores');
-    const globalConstraints = [
-        firebase.where('game', '==', game)
-    ];
-    if (mode === 'daily') {
-        globalConstraints.push(firebase.where('date', '==', getTodayKey()));
-    }
-    globalConstraints.push(firebase.orderBy('score', 'desc'));
-    globalConstraints.push(firebase.limit(30));
-    const globalSnapshot = await firebase.getDocs(firebase.query(scoresRef, ...globalConstraints));
-    renderLeaderboard('global-leaderboard', globalSnapshot, mode);
-
-    if (currentUser) {
-        const friends = await getFriendIds();
-        if (friends.length) {
-            const friendConstraints = [
-                firebase.where('game', '==', game),
-                firebase.where('uid', 'in', friends.slice(0, 10))
-            ];
-            if (mode === 'daily') {
-                friendConstraints.push(firebase.where('date', '==', getTodayKey()));
-            }
-            friendConstraints.push(firebase.orderBy('score', 'desc'));
-            friendConstraints.push(firebase.limit(50));
-            const friendSnapshot = await firebase.getDocs(firebase.query(scoresRef, ...friendConstraints));
-            renderLeaderboard('friends-leaderboard', friendSnapshot, mode, true);
-        } else {
-            document.getElementById('friends-leaderboard').innerHTML = '<li>No friends yet.</li>';
+    try {
+        const scoresRef = firebase.collection(firebase.db, 'scores');
+        const globalConstraints = [
+            firebase.where('game', '==', game)
+        ];
+        if (mode === 'daily') {
+            globalConstraints.push(firebase.where('date', '==', getTodayKey()));
         }
+        let globalSnapshot;
+        try {
+            const sortedConstraints = [...globalConstraints, firebase.orderBy('score', 'desc'), firebase.limit(30)];
+            globalSnapshot = await firebase.getDocs(firebase.query(scoresRef, ...sortedConstraints));
+        } catch (error) {
+            const fallbackConstraints = [...globalConstraints, firebase.limit(50)];
+            globalSnapshot = await firebase.getDocs(firebase.query(scoresRef, ...fallbackConstraints));
+        }
+        renderLeaderboard('global-leaderboard', globalSnapshot, mode, false, true);
+
+        if (currentUser) {
+            const friends = await getFriendIds();
+            if (friends.length) {
+                const friendConstraints = [
+                    firebase.where('game', '==', game),
+                    firebase.where('uid', 'in', friends.slice(0, 10))
+                ];
+                if (mode === 'daily') {
+                    friendConstraints.push(firebase.where('date', '==', getTodayKey()));
+                }
+                let friendSnapshot;
+                try {
+                    const sortedFriendConstraints = [...friendConstraints, firebase.orderBy('score', 'desc'), firebase.limit(50)];
+                    friendSnapshot = await firebase.getDocs(firebase.query(scoresRef, ...sortedFriendConstraints));
+                } catch (error) {
+                    const fallbackFriendConstraints = [...friendConstraints, firebase.limit(80)];
+                    friendSnapshot = await firebase.getDocs(firebase.query(scoresRef, ...fallbackFriendConstraints));
+                }
+                renderLeaderboard('friends-leaderboard', friendSnapshot, mode, true, true);
+            } else {
+                document.getElementById('friends-leaderboard').innerHTML = '<li>No friends yet.</li>';
+            }
+        }
+    } catch (error) {
+        globalEl.innerHTML = '<li>Unable to load leaderboard right now.</li>';
+        friendsEl.innerHTML = '<li>Unable to load leaderboard right now.</li>';
     }
 }
 
-function renderLeaderboard(elementId, snapshot, mode = 'daily', dedupeByUser = false) {
+function renderLeaderboard(elementId, snapshot, mode = 'daily', dedupeByUser = false, sortByScore = false) {
     const list = document.getElementById(elementId);
     if (snapshot.empty) {
         list.innerHTML = '<li>No scores yet.</li>';
@@ -516,8 +550,13 @@ function renderLeaderboard(elementId, snapshot, mode = 'daily', dedupeByUser = f
         });
         finalEntries = Object.values(bestByUser).sort((a, b) => b.score - a.score).slice(0, 10);
     } else {
-        finalEntries = entries.slice(0, 10);
+        finalEntries = entries.slice();
     }
+
+    if (sortByScore) {
+        finalEntries.sort((a, b) => (b.score || 0) - (a.score || 0));
+    }
+    finalEntries = finalEntries.slice(0, 10);
 
     finalEntries.forEach((data) => {
         const item = document.createElement('li');
@@ -800,8 +839,23 @@ function updateDailyGameLockUI() {
     });
 }
 
-window.canPlayDailyGame = (game) => {
+window.canPlayDailyGame = async (game) => {
     if (dailyScoresCache[game]) {
+        showMessage(game, 'You already played today. Come back tomorrow!', 'info');
+        return false;
+    }
+    if (!firebase || !currentUser) return true;
+    const snapshot = await firebase.getDocs(firebase.query(
+        firebase.collection(firebase.db, 'scores'),
+        firebase.where('uid', '==', currentUser.uid),
+        firebase.where('game', '==', game),
+        firebase.where('date', '==', getTodayKey()),
+        firebase.limit(1)
+    ));
+    if (!snapshot.empty) {
+        const scoreData = snapshot.docs[0].data();
+        dailyScoresCache[game] = scoreData;
+        updateDailyGameLockUI();
         showMessage(game, 'You already played today. Come back tomorrow!', 'info');
         return false;
     }
@@ -809,3 +863,4 @@ window.canPlayDailyGame = (game) => {
 };
 
 window.recordScore = recordScore;
+window.getCurrentUser = () => currentUser;

@@ -164,7 +164,7 @@
             </div>
             <div class="panel">
                 <h3>Your friend tag</h3>
-                <p>Share this tag to invite friends.</p>
+                <p>Tag your friend.</p>
                 <div class="invite-row">
                     <input type="text" id="friend-tag" readonly>
                     <button class="secondary-button" onclick="copyFriendTag()">Copy</button>
@@ -172,7 +172,7 @@
             </div>
             <div class="panel">
                 <h3>Accept an invite</h3>
-                <p>Paste a friend tag to connect with them.</p>
+                <p>Tag your friend back.</p>
                 <div class="invite-row">
                     <input type="text" id="invite-code" placeholder="🥬123456789">
                     <button class="primary-button" onclick="acceptInvite()">Send Request</button>
@@ -217,6 +217,13 @@
                 <div id="sudoku-controls">
                     <div id="number-pad"></div>
                     <button class="control-button" onclick="clearSudokuCell()">Clear</button>
+                </div>
+                <div class="sudoku-footer">
+                    <div class="sudoku-history-track" id="sudoku-history-circles" aria-label="Sudoku game history"></div>
+                    <div class="sudoku-game-meta">
+                        <span id="sudoku-game-status">Game 1</span>
+                        <span id="sudoku-game-number">#1</span>
+                    </div>
                 </div>
                 <div id="sudoku-message" class="message"></div>
             </div>

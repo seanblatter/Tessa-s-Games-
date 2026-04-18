@@ -246,6 +246,9 @@ async function submitBeeWord() {
     if (beeState.gameOver || beeState.isSubmitting) return;
 
     const word = beeState.currentWord.toUpperCase();
+    beeState.currentWord = '';
+    renderBeeEntry();
+
     const allowed = new Set([beeState.puzzle.center, ...beeState.puzzle.outer]);
 
     if (word.length < 4) {
@@ -266,11 +269,7 @@ async function submitBeeWord() {
         const valid = await isDictionaryWord(word);
         beeState.isSubmitting = false;
 
-        if (beeState.gameOver) {
-            beeState.currentWord = '';
-            renderBeeEntry();
-            return;
-        }
+        if (beeState.gameOver) return;
 
         if (!valid) {
             showMessage('spellingbee', 'Not a valid dictionary word.', 'error');
@@ -293,8 +292,6 @@ async function submitBeeWord() {
         }
     }
 
-    beeState.currentWord = '';
-    renderBeeEntry();
 }
 
 document.addEventListener('keydown', (e) => {
