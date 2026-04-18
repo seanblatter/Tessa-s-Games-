@@ -509,7 +509,10 @@ async function loadLeaderboards(game, mode = 'daily') {
             const fallbackConstraints = [...globalConstraints, firebase.limit(50)];
             globalSnapshot = await firebase.getDocs(firebase.query(scoresRef, ...fallbackConstraints));
         }
-        renderLeaderboard('global-leaderboard', globalSnapshot, mode, false, true);
+        const globalCount = renderLeaderboard('global-leaderboard', globalSnapshot, mode, false, true, game);
+        if (globalCount === 0) {
+            renderCurrentUserLeaderboardFallback('global-leaderboard', game);
+        }
 
         if (currentUser) {
             const friends = await getFriendIds();
@@ -529,7 +532,10 @@ async function loadLeaderboards(game, mode = 'daily') {
                     const fallbackFriendConstraints = [...friendConstraints, firebase.limit(80)];
                     friendSnapshot = await firebase.getDocs(firebase.query(scoresRef, ...fallbackFriendConstraints));
                 }
-                renderLeaderboard('friends-leaderboard', friendSnapshot, mode, true, true);
+                const friendCount = renderLeaderboard('friends-leaderboard', friendSnapshot, mode, true, true, game);
+                if (friendCount === 0) {
+                    renderCurrentUserLeaderboardFallback('friends-leaderboard', game);
+                }
             } else {
                 document.getElementById('friends-leaderboard').innerHTML = '<li>No friends yet.</li>';
             }
@@ -540,11 +546,11 @@ async function loadLeaderboards(game, mode = 'daily') {
     }
 }
 
-function renderLeaderboard(elementId, snapshot, mode = 'daily', dedupeByUser = false, sortByScore = false) {
+function renderLeaderboard(elementId, snapshot, mode = 'daily', dedupeByUser = false, sortByScore = false, game = '') {
     const list = document.getElementById(elementId);
     if (snapshot.empty) {
-        list.innerHTML = '<li>No scores yet.</li>';
-        return;
+        list.innerHTML = '';
+        return 0;
     }
     list.innerHTML = '';
     const entries = [];
@@ -569,7 +575,9 @@ function renderLeaderboard(elementId, snapshot, mode = 'daily', dedupeByUser = f
     }
     finalEntries = finalEntries.slice(0, 10);
 
+    let renderedCount = 0;
     finalEntries.forEach((data) => {
+        if (game && data.game && data.game !== game) return;
         const item = document.createElement('li');
         const avatar = data.photoURL || 'https://www.gravatar.com/avatar/?d=mp';
         item.innerHTML = `
@@ -577,7 +585,29 @@ function renderLeaderboard(elementId, snapshot, mode = 'daily', dedupeByUser = f
             <span>${data.displayName || data.uid} · ${data.score}</span>
         `;
         list.appendChild(item);
+        renderedCount += 1;
     });
+    return renderedCount;
+}
+
+function renderCurrentUserLeaderboardFallback(elementId, game) {
+    const list = document.getElementById(elementId);
+    if (!list || !currentUser) {
+        if (list) list.innerHTML = '<li>No scores yet.</li>';
+        return;
+    }
+    const cached = dailyScoresCache[game];
+    if (!cached || typeof cached.score !== 'number') {
+        list.innerHTML = '<li>No scores yet.</li>';
+        return;
+    }
+    const avatar = currentUser.photoURL || 'https://www.gravatar.com/avatar/?d=mp';
+    list.innerHTML = `
+        <li>
+            <img class="leader-avatar" src="${avatar}" alt="${currentUser.displayName || 'Player'}">
+            <span>${currentUser.displayName || 'You'} · ${cached.score}</span>
+        </li>
+    `;
 }
 
 async function renderProfile() {
