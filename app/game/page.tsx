@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { Board } from "@/components/Board";
 import Dragon from "@/components/Dragon";
 import UIOverlay from "@/components/UIOverlay";
+import { DRAGON_MAX } from "@/lib/gameLogic";
 import { useGameStore } from "@/store/useGameStore";
 
 const DRAGON_TICK_EVERY_MS = 15000;
@@ -32,7 +33,7 @@ export default function GamePage() {
       const nextDragon = store.dragonSize + 1;
       useGameStore.setState({
         dragonSize: nextDragon,
-        gameStatus: nextDragon >= 10 ? "lost" : "playing",
+        gameStatus: nextDragon >= DRAGON_MAX ? "lost" : "playing",
       });
     }, DRAGON_TICK_EVERY_MS);
 

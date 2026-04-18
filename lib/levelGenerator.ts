@@ -18,45 +18,72 @@ export type LevelConfig = {
   shufflePasses?: number;
 };
 
-function shuffle<T>(array: T[]): T[] {
-  const next = [...array];
+function randomInt(maxExclusive: number): number {
+  return Math.floor(Math.random() * maxExclusive);
+}
 
-  for (let i = next.length - 1; i > 0; i -= 1) {
-    const randomIndex = Math.floor(Math.random() * (i + 1));
-    [next[i], next[randomIndex]] = [next[randomIndex], next[i]];
+function cloneColumns(columns: string[][]): string[][] {
+  return columns.map((column) => [...column]);
+}
+
+function isValidMove(columns: string[][], from: number, to: number, maxHeight: number): boolean {
+  if (from === to) return false;
+
+  const source = columns[from];
+  const target = columns[to];
+  if (!source || !target || source.length === 0 || target.length >= maxHeight) {
+    return false;
   }
 
-  return next;
+  const moving = source[source.length - 1];
+  const targetTop = target[target.length - 1];
+  return target.length === 0 || targetTop === moving;
+}
+
+function applyMove(columns: string[][], from: number, to: number): boolean {
+  const source = columns[from];
+  const target = columns[to];
+  const moving = source.pop();
+
+  if (!moving) return false;
+
+  target.push(moving);
+  return true;
 }
 
 export function generateLevel(config: LevelConfig = {}): string[][] {
   const colorCount = config.colorCount ?? 4;
   const maxHeight = config.maxHeight ?? 4;
   const emptyColumns = config.emptyColumns ?? 2;
-  const shufflePasses = config.shufflePasses ?? 6;
+  const shufflePasses = config.shufflePasses ?? 80;
 
   const chosenColors = COLOR_POOL.slice(0, colorCount);
   const totalColumns = colorCount + emptyColumns;
 
-  let level: string[][] = [
+  // Start from a solved board, then scramble using only legal moves.
+  // This guarantees the generated board is reachable and therefore solvable.
+  const columns: string[][] = [
     ...chosenColors.map((color) => Array.from({ length: maxHeight }, () => color)),
     ...Array.from({ length: emptyColumns }, () => [] as string[]),
   ];
 
-  for (let pass = 0; pass < shufflePasses; pass += 1) {
-    const segments = shuffle(level.flat());
-    const nextColumns: string[][] = Array.from({ length: totalColumns }, () => []);
+  let steps = 0;
+  const targetSteps = Math.max(shufflePasses, colorCount * maxHeight * 4);
 
-    let cursor = 0;
-    for (let c = 0; c < colorCount; c += 1) {
-      for (let h = 0; h < maxHeight; h += 1) {
-        nextColumns[c].push(segments[cursor]);
-        cursor += 1;
-      }
+  while (steps < targetSteps) {
+    const from = randomInt(totalColumns);
+    const to = randomInt(totalColumns);
+
+    if (!isValidMove(columns, from, to, maxHeight)) {
+      continue;
     }
 
-    level = nextColumns;
+    if (!applyMove(columns, from, to)) {
+      continue;
+    }
+
+    steps += 1;
   }
 
-  return level;
+  return cloneColumns(columns);
 }
