@@ -210,22 +210,34 @@
             <div class="game-header">
                 <button class="back-button" onclick="showMenu()">← Back</button>
                 <h2>Clash</h2>
-                <button class="new-game-button" onclick="initClash()">Refresh</button>
+                <button class="new-game-button" onclick="initClash()">Restart</button>
             </div>
             <div id="clash-game" class="panel">
-                <h3>Real-time Clash arena (desktop build)</h3>
-                <p>
-                    This game is implemented with <strong>Pygame</strong> for smooth real-time combat and bot opponents.
-                    Use this card to launch the local desktop game from this repository.
-                </p>
-                <ol class="clash-steps">
-                    <li>Open terminal in this project folder.</li>
-                    <li>Install dependency: <code>pip install pygame</code></li>
-                    <li>Run command below:</li>
-                </ol>
-                <pre id="clash-launch-command" class="clash-command">python3 clash_of_clans_pygame.py</pre>
-                <button class="primary-button" onclick="copyClashCommand()">Copy Launch Command</button>
-                <p id="clash-message" class="message"></p>
+                <div class="clash-hud">
+                    <span id="clash-status">Level 1: Emerald Plains</span>
+                    <span id="clash-timer">3:00</span>
+                    <span id="clash-score">👑 0 - 0</span>
+                    <span id="clash-elixir">Elixir 5.0 / 10</span>
+                </div>
+                <canvas id="clash-canvas" width="980" height="540" aria-label="Clash browser game arena"></canvas>
+                <div class="clash-controls">
+                    <div class="clash-card-row" role="group" aria-label="Choose unit card">
+                        <button class="control-button active" data-clash-card="knight">Knight (3)</button>
+                        <button class="control-button" data-clash-card="archer">Archer (3)</button>
+                        <button class="control-button" data-clash-card="giant">Giant (5)</button>
+                        <button class="control-button" data-clash-card="wizard">Wizard (4)</button>
+                        <button class="control-button" data-clash-card="bomber">Bomber (3)</button>
+                    </div>
+                    <div class="clash-action-row" role="group" aria-label="Spawn controls">
+                        <button class="control-button" data-clash-lane="0">Top Lane</button>
+                        <button class="control-button active" data-clash-lane="1">Mid Lane</button>
+                        <button class="control-button" data-clash-lane="2">Bottom Lane</button>
+                        <button id="clash-spawn" class="primary-button">Spawn Unit</button>
+                        <button id="clash-restart" class="secondary-button">Restart Match</button>
+                        <button id="clash-next-level" class="secondary-button">Next Level</button>
+                    </div>
+                </div>
+                <p id="clash-message" class="message">Play directly in-browser against bots. Multiplayer hook-up can be added later.</p>
             </div>
         </div>
 
