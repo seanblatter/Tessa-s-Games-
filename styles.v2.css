@@ -767,7 +767,8 @@ body {
 /* Sudoku Styles */
 .sudoku-settings {
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
+    align-items: center;
     margin-bottom: 12px;
 }
 
@@ -854,7 +855,7 @@ body {
 
 .sudoku-history-track {
     display: flex;
-    gap: 8px;
+    gap: 6px;
     overflow-x: auto;
     padding: 4px 2px 8px;
 }
@@ -1410,8 +1411,8 @@ body {
 
 #clash-canvas {
     width: 100%;
-    max-width: 420px;
-    aspect-ratio: 420 / 760;
+    max-width: 380px;
+    aspect-ratio: 380 / 560;
     border-radius: 18px;
     border: 2px solid rgba(92, 108, 255, 0.24);
     background: #d5e7ff;
@@ -1422,14 +1423,14 @@ body {
 }
 
 .clash-controls {
-    margin-top: 14px;
+    margin-top: 8px;
     display: grid;
     gap: 8px;
 }
 
 .clash-card-row {
     display: flex;
-    gap: 8px;
+    gap: 6px;
     overflow-x: auto;
     padding-bottom: 4px;
     -webkit-overflow-scrolling: touch;
@@ -1438,7 +1439,8 @@ body {
 .clash-action-row {
     display: flex;
     gap: 8px;
-    justify-content: flex-end;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .clash-card-row .control-button,
@@ -1474,4 +1476,22 @@ body {
     .clash-time-pill {
         align-self: flex-start;
     }
+}
+
+
+.clash-inline-elixir {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 38px;
+    padding: 0 12px;
+    border-radius: 12px;
+    background: #2f4782;
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+#clash-game {
+    padding: 14px;
 }
