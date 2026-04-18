@@ -1,24 +1,20 @@
 "use client";
 
 import { memo } from "react";
-import { motion } from "framer-motion";
 
 type YarnSegmentProps = {
   color: string;
-  depth: number;
+  label: string;
 };
 
-function YarnSegmentComponent({ color, depth }: YarnSegmentProps) {
+function YarnSegmentComponent({ color, label }: YarnSegmentProps) {
   return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -10 }}
-      transition={{ type: "spring", stiffness: 320, damping: 26, delay: depth * 0.015 }}
-      className="h-12 w-full rounded-xl border border-white/40 shadow-inner"
-      style={{ backgroundColor: color }}
-    />
+    <div className="rounded-lg border border-slate-200 bg-white p-2">
+      <div className="flex items-center gap-2 text-xs font-medium text-slate-600">
+        <span className="h-3 w-3 rounded-full" style={{ backgroundColor: color }} />
+        <span>{label}</span>
+      </div>
+    </div>
   );
 }
 

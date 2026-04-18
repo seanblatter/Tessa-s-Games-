@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 
 type UIOverlayProps = {
   gameStatus: "playing" | "won" | "lost";
@@ -23,11 +23,11 @@ export default function UIOverlay({ gameStatus, onReset, onNewLevel }: UIOverlay
             animate={{ scale: 1, y: 0 }}
             className="w-full max-w-sm rounded-3xl bg-white p-6 text-center shadow-card"
           >
-            <h2 className="text-2xl font-black text-slate-900">{gameStatus === "won" ? "You Calmed the Dragon!" : "The Dragon Took Over!"}</h2>
+            <h2 className="text-2xl font-black text-slate-900">{gameStatus === "won" ? "Yarn Untangled!" : "Dragon Overheated!"}</h2>
             <p className="mt-2 text-sm text-slate-600">
               {gameStatus === "won"
-                ? "Perfect sorting! Every yarn column is now organized."
-                : "Too many invalid moves made the dragon fully grown."}
+                ? "Perfect rerouting. All yarn paths are valid with no intersections."
+                : "Too much tension from tangles and mistakes fed the dragon."}
             </p>
             <div className="mt-5 flex justify-center gap-3">
               <button className="rounded-xl bg-slate-200 px-4 py-2 text-sm font-semibold" onClick={onReset}>

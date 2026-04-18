@@ -1,8 +1,8 @@
-export function isColumnSolved(column: string[]): boolean {
-  if (column.length === 0) return true;
-  return column.every((segment) => segment === column[0]);
-}
+import { countIntersections, isValidPath, type GameLevel } from "@/lib/gameLogic";
 
-export function checkWin(columns: string[][]): boolean {
-  return columns.every(isColumnSolved);
+export function checkWin(level: GameLevel): boolean {
+  const allValid = level.yarns.every((yarn) => isValidPath(yarn.path, level.nodes));
+  if (!allValid) return false;
+
+  return countIntersections(level) === 0;
 }

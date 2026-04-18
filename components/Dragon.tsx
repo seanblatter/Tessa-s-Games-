@@ -5,24 +5,26 @@ import { DRAGON_MAX } from "@/lib/gameLogic";
 
 type DragonProps = {
   dragonSize: number;
+  intersections: number;
 };
 
-export default function Dragon({ dragonSize }: DragonProps) {
+export default function Dragon({ dragonSize, intersections }: DragonProps) {
   const ratio = Math.min(dragonSize / DRAGON_MAX, 1);
   const scale = 0.8 + ratio * 0.5;
 
   return (
-    <div className="flex w-full max-w-xs flex-col gap-2 rounded-2xl bg-white p-4 shadow-card">
+    <div className="flex w-full flex-col gap-2 rounded-2xl bg-white p-4 shadow-card">
       <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-slate-500">
-        <span>Dragon Pressure</span>
+        <span>Dragon Tension</span>
         <span>{dragonSize}/{DRAGON_MAX}</span>
       </div>
+      <div className="text-xs text-slate-500">Intersections: {intersections}</div>
       <div className="h-2 overflow-hidden rounded-full bg-slate-200">
         <motion.div className="h-full rounded-full bg-rose-500" animate={{ width: `${ratio * 100}%` }} transition={{ type: "spring", stiffness: 200, damping: 25 }} />
       </div>
       <div className="grid place-items-center pt-2">
         <motion.svg
-          animate={{ scale, rotate: ratio * 4 }}
+          animate={{ scale, rotate: ratio * 6 }}
           transition={{ type: "spring", stiffness: 180, damping: 15 }}
           width="160"
           height="120"

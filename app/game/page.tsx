@@ -2,23 +2,27 @@
 
 import { useEffect } from "react";
 import { Board } from "@/components/Board";
+import { Column } from "@/components/Column";
 import Dragon from "@/components/Dragon";
 import UIOverlay from "@/components/UIOverlay";
-import { DRAGON_MAX } from "@/lib/gameLogic";
+import { YarnSegment } from "@/components/YarnSegment";
 import { useGameStore } from "@/store/useGameStore";
 
-const DRAGON_TICK_EVERY_MS = 15000;
+const DRAGON_TICK_EVERY_MS = 12000;
 const ENABLE_DRAGON_TIMER = true;
 
 export default function GamePage() {
   const {
-    columns,
-    selectedColumn,
-    maxHeight,
+    nodes,
+    yarns,
+    selectedYarn,
     dragonSize,
+    intersections,
     gameStatus,
-    invalidTarget,
-    selectColumn,
+    invalidMoveFlash,
+    selectYarn,
+    rerouteYarn,
+    addDragonPressure,
     resetGame,
     generateLevel,
   } = useGameStore((state) => state);
@@ -27,27 +31,20 @@ export default function GamePage() {
     if (!ENABLE_DRAGON_TIMER) return;
 
     const interval = setInterval(() => {
-      const store = useGameStore.getState();
-      if (store.gameStatus !== "playing") return;
-
-      const nextDragon = store.dragonSize + 1;
-      useGameStore.setState({
-        dragonSize: nextDragon,
-        gameStatus: nextDragon >= DRAGON_MAX ? "lost" : "playing",
-      });
+      addDragonPressure(1);
     }, DRAGON_TICK_EVERY_MS);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [addDragonPressure]);
 
   return (
     <main className="min-h-screen p-4 sm:p-6">
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 lg:flex-row">
-        <section className="relative flex-1 rounded-3xl bg-white p-4 shadow-card sm:p-6">
+      <div className="mx-auto grid w-full max-w-7xl gap-4 lg:grid-cols-[1fr_360px]">
+        <section className="relative rounded-3xl bg-white p-4 shadow-card sm:p-6">
           <div className="mb-4 rounded-2xl bg-gradient-to-r from-indigo-100 to-sky-100 p-4">
-            <h1 className="text-xl font-black text-slate-900 sm:text-2xl">Yarn Dragon Sort</h1>
+            <h1 className="text-xl font-black text-slate-900 sm:text-2xl">Yarn Path Untangler</h1>
             <p className="mt-1 text-xs text-slate-600 sm:text-sm">
-              Tap one column to pick up top yarn, then tap a destination with matching top color or an empty column.
+              Tap a yarn path to select it, then tap a node to reroute through that anchor. Remove intersections to calm the dragon.
             </p>
           </div>
 
@@ -60,30 +57,37 @@ export default function GamePage() {
             </button>
           </div>
 
-          <div className="rounded-2xl bg-white p-2">
-            <Board
-              columns={columns}
-              selectedColumn={selectedColumn}
-              invalidTarget={invalidTarget}
-              maxHeight={maxHeight}
-              onSelectColumn={selectColumn}
-            />
-          </div>
+          <Board
+            nodes={nodes}
+            yarns={yarns}
+            selectedYarn={selectedYarn}
+            invalidMoveFlash={invalidMoveFlash}
+            onPickYarn={selectYarn}
+            onPickNode={rerouteYarn}
+          />
 
           <UIOverlay gameStatus={gameStatus} onReset={resetGame} onNewLevel={generateLevel} />
         </section>
 
-        <aside className="flex w-full flex-col gap-4 lg:w-80">
-          <Dragon dragonSize={dragonSize} />
+        <aside className="flex flex-col gap-4">
+          <Dragon dragonSize={dragonSize} intersections={intersections} />
+
           <div className="rounded-2xl bg-white p-4 shadow-card">
-            <h2 className="text-sm font-bold uppercase tracking-wide text-slate-500">Play Card</h2>
-            <button
-              onClick={generateLevel}
-              className="mt-3 w-full rounded-2xl border-2 border-indigo-200 bg-indigo-50 p-4 text-left transition active:scale-[0.98]"
-            >
-              <p className="text-base font-black text-indigo-700">🎮 Tap to Start a Fresh Puzzle</p>
-              <p className="mt-1 text-xs text-indigo-600">This card is clickable so players can quickly jump into a playable level.</p>
-            </button>
+            <h2 className="text-sm font-bold uppercase tracking-wide text-slate-500">Playable Yarn Cards</h2>
+            <div className="mt-3 space-y-2">
+              {yarns.map((yarn) => (
+                <Column key={yarn.id} yarn={yarn} selected={selectedYarn === yarn.id} onClick={() => selectYarn(yarn.id)} />
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-2xl bg-white p-4 shadow-card">
+            <h2 className="text-sm font-bold uppercase tracking-wide text-slate-500">How to Play</h2>
+            <div className="mt-3 space-y-2">
+              <YarnSegment color="#3b82f6" label="1) Tap a yarn line (or yarn card) to select it." />
+              <YarnSegment color="#10b981" label="2) Tap an anchor node to reroute selected yarn." />
+              <YarnSegment color="#ef4444" label="3) Minimize crossings before dragon tension fills." />
+            </div>
           </div>
         </aside>
       </div>

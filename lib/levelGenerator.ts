@@ -1,89 +1,48 @@
-const COLOR_POOL = [
-  "#ef4444",
-  "#f59e0b",
-  "#22c55e",
-  "#3b82f6",
-  "#a855f7",
-  "#ec4899",
-  "#14b8a6",
-  "#f97316",
-  "#06b6d4",
-  "#84cc16",
+import type { GameLevel, GraphNode, YarnPath } from "@/lib/gameLogic";
+
+const BASE_NODES: GraphNode[] = [
+  { id: "A", x: 80, y: 80, connections: ["B", "D", "E"] },
+  { id: "B", x: 220, y: 80, connections: ["A", "C", "E"] },
+  { id: "C", x: 360, y: 80, connections: ["B", "F", "E"] },
+  { id: "D", x: 80, y: 220, connections: ["A", "E", "G"] },
+  { id: "E", x: 220, y: 220, connections: ["A", "B", "C", "D", "F", "G", "H", "I"] },
+  { id: "F", x: 360, y: 220, connections: ["C", "E", "I"] },
+  { id: "G", x: 80, y: 360, connections: ["D", "E", "H"] },
+  { id: "H", x: 220, y: 360, connections: ["G", "E", "I"] },
+  { id: "I", x: 360, y: 360, connections: ["F", "H", "E"] },
 ];
 
-export type LevelConfig = {
-  colorCount?: number;
-  maxHeight?: number;
-  emptyColumns?: number;
-  shufflePasses?: number;
-};
+const BASE_YARNS: YarnPath[] = [
+  { id: "red", color: "#ef4444", start: "A", end: "I", path: ["A", "E", "I"] },
+  { id: "blue", color: "#3b82f6", start: "C", end: "G", path: ["C", "E", "G"] },
+  { id: "green", color: "#22c55e", start: "B", end: "H", path: ["B", "E", "H"] },
+];
 
-function randomInt(maxExclusive: number): number {
-  return Math.floor(Math.random() * maxExclusive);
+const TANGLED_VARIANTS: string[][][] = [
+  [
+    ["A", "B", "E", "F", "I"],
+    ["C", "B", "E", "D", "G"],
+    ["B", "A", "E", "I", "H"],
+  ],
+  [
+    ["A", "D", "E", "C", "F", "I"],
+    ["C", "F", "E", "A", "D", "G"],
+    ["B", "E", "I", "H"],
+  ],
+];
+
+function pickVariant(): string[][] {
+  return TANGLED_VARIANTS[Math.floor(Math.random() * TANGLED_VARIANTS.length)];
 }
 
-function cloneColumns(columns: string[][]): string[][] {
-  return columns.map((column) => [...column]);
-}
+export function generateLevel(): GameLevel {
+  const nodes = Object.fromEntries(BASE_NODES.map((node) => [node.id, { ...node }])) as Record<string, GraphNode>;
+  const variant = pickVariant();
 
-function isValidMove(columns: string[][], from: number, to: number, maxHeight: number): boolean {
-  if (from === to) return false;
+  const yarns = BASE_YARNS.map((yarn, index) => ({
+    ...yarn,
+    path: [...variant[index]],
+  }));
 
-  const source = columns[from];
-  const target = columns[to];
-  if (!source || !target || source.length === 0 || target.length >= maxHeight) {
-    return false;
-  }
-
-  const moving = source[source.length - 1];
-  const targetTop = target[target.length - 1];
-  return target.length === 0 || targetTop === moving;
-}
-
-function applyMove(columns: string[][], from: number, to: number): boolean {
-  const source = columns[from];
-  const target = columns[to];
-  const moving = source.pop();
-
-  if (!moving) return false;
-
-  target.push(moving);
-  return true;
-}
-
-export function generateLevel(config: LevelConfig = {}): string[][] {
-  const colorCount = config.colorCount ?? 4;
-  const maxHeight = config.maxHeight ?? 4;
-  const emptyColumns = config.emptyColumns ?? 2;
-  const shufflePasses = config.shufflePasses ?? 80;
-
-  const chosenColors = COLOR_POOL.slice(0, colorCount);
-  const totalColumns = colorCount + emptyColumns;
-
-  // Start from a solved board, then scramble using only legal moves.
-  // This guarantees the generated board is reachable and therefore solvable.
-  const columns: string[][] = [
-    ...chosenColors.map((color) => Array.from({ length: maxHeight }, () => color)),
-    ...Array.from({ length: emptyColumns }, () => [] as string[]),
-  ];
-
-  let steps = 0;
-  const targetSteps = Math.max(shufflePasses, colorCount * maxHeight * 4);
-
-  while (steps < targetSteps) {
-    const from = randomInt(totalColumns);
-    const to = randomInt(totalColumns);
-
-    if (!isValidMove(columns, from, to, maxHeight)) {
-      continue;
-    }
-
-    if (!applyMove(columns, from, to)) {
-      continue;
-    }
-
-    steps += 1;
-  }
-
-  return cloneColumns(columns);
+  return { nodes, yarns };
 }

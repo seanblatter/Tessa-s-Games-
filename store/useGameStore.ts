@@ -1,97 +1,107 @@
 "use client";
 
 import { create } from "zustand";
-import { applyMove, canMove, DRAGON_MAX } from "@/lib/gameLogic";
-import { generateLevel } from "@/lib/levelGenerator";
 import { checkWin } from "@/lib/winCondition";
+import { countIntersections, DRAGON_MAX, rerouteThroughNode, type GameLevel, type GraphNode, type YarnPath } from "@/lib/gameLogic";
+import { generateLevel } from "@/lib/levelGenerator";
 
 type GameStatus = "playing" | "won" | "lost";
 
 type GameState = {
-  columns: string[][];
-  selectedColumn: number | null;
-  maxHeight: number;
+  nodes: Record<string, GraphNode>;
+  yarns: YarnPath[];
+  selectedYarn: string | null;
   dragonSize: number;
+  intersections: number;
   gameStatus: GameStatus;
-  invalidTarget: number | null;
-  selectColumn: (index: number) => void;
-  moveYarn: (from: number, to: number) => void;
+  invalidMoveFlash: boolean;
+  selectYarn: (id: string) => void;
+  rerouteYarn: (viaNodeId: string) => void;
+  addDragonPressure: (amount: number) => void;
   resetGame: () => void;
   generateLevel: () => void;
 };
 
-const MAX_HEIGHT = 4;
-
-const buildInitialColumns = () => generateLevel({ colorCount: 4, maxHeight: MAX_HEIGHT, emptyColumns: 2 });
+function createInitialState(): Pick<GameState, "nodes" | "yarns" | "intersections"> {
+  const level = generateLevel();
+  return {
+    nodes: level.nodes,
+    yarns: level.yarns,
+    intersections: countIntersections(level),
+  };
+}
 
 export const useGameStore = create<GameState>((set, get) => ({
-  columns: buildInitialColumns(),
-  selectedColumn: null,
-  maxHeight: MAX_HEIGHT,
+  ...createInitialState(),
+  selectedYarn: null,
   dragonSize: 0,
   gameStatus: "playing",
-  invalidTarget: null,
+  invalidMoveFlash: false,
 
-  selectColumn: (index) => {
-    const { selectedColumn, gameStatus } = get();
-    if (gameStatus !== "playing") return;
-
-    if (selectedColumn === null) {
-      set({ selectedColumn: index, invalidTarget: null });
-      return;
-    }
-
-    if (selectedColumn === index) {
-      set({ selectedColumn: null, invalidTarget: null });
-      return;
-    }
-
-    get().moveYarn(selectedColumn, index);
+  selectYarn: (id) => {
+    if (get().gameStatus !== "playing") return;
+    set((state) => ({ selectedYarn: state.selectedYarn === id ? null : id }));
   },
 
-  moveYarn: (from, to) => {
-    const { columns, maxHeight, dragonSize, gameStatus } = get();
-    if (gameStatus !== "playing") return;
+  rerouteYarn: (viaNodeId) => {
+    const { nodes, yarns, selectedYarn, dragonSize, gameStatus } = get();
+    if (gameStatus !== "playing" || !selectedYarn) return;
 
-    if (!canMove(columns, from, to, maxHeight)) {
-      const nextDragonSize = dragonSize + 1;
+    const level: GameLevel = { nodes, yarns };
+    const nextYarns = rerouteThroughNode(level, selectedYarn, viaNodeId);
+
+    if (!nextYarns) {
+      const nextDragon = dragonSize + 1;
       set({
-        dragonSize: nextDragonSize,
-        selectedColumn: null,
-        invalidTarget: to,
-        gameStatus: nextDragonSize >= DRAGON_MAX ? "lost" : "playing",
+        dragonSize: nextDragon,
+        selectedYarn: null,
+        invalidMoveFlash: true,
+        gameStatus: nextDragon >= DRAGON_MAX ? "lost" : "playing",
       });
+      setTimeout(() => set({ invalidMoveFlash: false }), 220);
       return;
     }
 
-    const nextColumns = applyMove(columns, from, to);
-    const won = checkWin(nextColumns);
+    const nextLevel: GameLevel = { nodes, yarns: nextYarns };
+    const intersections = countIntersections(nextLevel);
+    const won = checkWin(nextLevel);
 
     set({
-      columns: nextColumns,
-      selectedColumn: null,
-      invalidTarget: null,
+      yarns: nextYarns,
+      selectedYarn: null,
+      intersections,
+      invalidMoveFlash: false,
       gameStatus: won ? "won" : "playing",
-      dragonSize: won ? 0 : dragonSize,
+      dragonSize: won ? 0 : Math.min(dragonSize + intersections, DRAGON_MAX),
     });
   },
 
+  addDragonPressure: (amount) =>
+    set((state) => {
+      if (state.gameStatus !== "playing") return state;
+      const nextDragon = state.dragonSize + amount;
+
+      return {
+        dragonSize: nextDragon,
+        gameStatus: nextDragon >= DRAGON_MAX ? "lost" : "playing",
+      };
+    }),
+
   resetGame: () =>
-    set((state) => ({
-      columns: buildInitialColumns(),
-      selectedColumn: null,
+    set(() => ({
+      ...createInitialState(),
+      selectedYarn: null,
       dragonSize: 0,
       gameStatus: "playing",
-      maxHeight: state.maxHeight,
-      invalidTarget: null,
+      invalidMoveFlash: false,
     })),
 
   generateLevel: () =>
-    set((state) => ({
-      columns: generateLevel({ colorCount: 4, maxHeight: state.maxHeight, emptyColumns: 2 }),
-      selectedColumn: null,
+    set(() => ({
+      ...createInitialState(),
+      selectedYarn: null,
       dragonSize: 0,
       gameStatus: "playing",
-      invalidTarget: null,
+      invalidMoveFlash: false,
     })),
 }));
