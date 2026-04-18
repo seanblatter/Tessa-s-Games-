@@ -210,34 +210,50 @@
             <div class="game-header">
                 <button class="back-button" onclick="showMenu()">← Back</button>
                 <h2>Clash</h2>
-                <button class="new-game-button" onclick="initClash()">Restart</button>
+                <button class="new-game-button" onclick="initClash(true)">New Match</button>
             </div>
-            <div id="clash-game" class="panel">
-                <div class="clash-hud">
-                    <span id="clash-status">Level 1: Emerald Plains</span>
-                    <span id="clash-timer">3:00</span>
-                    <span id="clash-score">👑 0 - 0</span>
-                    <span id="clash-elixir">Elixir 5.0 / 10</span>
+            <div id="clash-game" class="panel clash-panel">
+                <div class="clash-topbar">
+                    <div>
+                        <strong id="clash-status">Level 1 · Emerald Keep</strong>
+                        <p id="clash-substatus">Capture more crowns before time ends.</p>
+                    </div>
+                    <div class="clash-time-pill" id="clash-timer">3:00</div>
                 </div>
-                <canvas id="clash-canvas" width="980" height="540" aria-label="Clash browser game arena"></canvas>
+
+                <div class="clash-scoreband" aria-label="Live score">
+                    <div class="clash-team enemy">
+                        <span class="label">Bot</span>
+                        <span id="clash-bot-elixir">Elixir 5.0</span>
+                    </div>
+                    <div class="clash-crowns" id="clash-score">👑 0 : 0 👑</div>
+                    <div class="clash-team player">
+                        <span class="label">You</span>
+                        <span id="clash-player-elixir">Elixir 5.0</span>
+                    </div>
+                </div>
+
+                <canvas id="clash-canvas" width="420" height="760" aria-label="Clash battle arena"></canvas>
+
                 <div class="clash-controls">
-                    <div class="clash-card-row" role="group" aria-label="Choose unit card">
-                        <button class="control-button active" data-clash-card="knight">Knight (3)</button>
-                        <button class="control-button" data-clash-card="archer">Archer (3)</button>
-                        <button class="control-button" data-clash-card="giant">Giant (5)</button>
-                        <button class="control-button" data-clash-card="wizard">Wizard (4)</button>
-                        <button class="control-button" data-clash-card="bomber">Bomber (3)</button>
+                    <div class="clash-card-row" role="group" aria-label="Choose troop">
+                        <button class="control-button active" data-clash-card="knight">⚔ Knight 3</button>
+                        <button class="control-button" data-clash-card="archer">🏹 Archer 3</button>
+                        <button class="control-button" data-clash-card="giant">🛡 Giant 5</button>
+                        <button class="control-button" data-clash-card="wizard">✨ Wizard 4</button>
+                        <button class="control-button" data-clash-card="bomber">💣 Bomber 3</button>
+                        <button class="control-button" data-clash-card="healer">💚 Healer 4</button>
                     </div>
-                    <div class="clash-action-row" role="group" aria-label="Spawn controls">
-                        <button class="control-button" data-clash-lane="0">Top Lane</button>
-                        <button class="control-button active" data-clash-lane="1">Mid Lane</button>
-                        <button class="control-button" data-clash-lane="2">Bottom Lane</button>
-                        <button id="clash-spawn" class="primary-button">Spawn Unit</button>
-                        <button id="clash-restart" class="secondary-button">Restart Match</button>
-                        <button id="clash-next-level" class="secondary-button">Next Level</button>
+                    <div class="clash-action-row" role="group" aria-label="Deployment controls">
+                        <button class="control-button" data-clash-lane="0">Left Lane</button>
+                        <button class="control-button active" data-clash-lane="1">Center Lane</button>
+                        <button class="control-button" data-clash-lane="2">Right Lane</button>
+                        <button id="clash-spawn" class="primary-button">Deploy</button>
+                        <button id="clash-restart" class="secondary-button">Restart</button>
+                        <button id="clash-next-level" class="secondary-button">Next Arena</button>
                     </div>
                 </div>
-                <p id="clash-message" class="message">Play directly in-browser against bots. Multiplayer hook-up can be added later.</p>
+                <p id="clash-message" class="message"></p>
             </div>
         </div>
 

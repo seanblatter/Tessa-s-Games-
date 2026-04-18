@@ -28,7 +28,7 @@ A beautiful, mobile-friendly web application featuring three classic games custo
 - Playable against adaptive bots across 3 distinct levels/themes
 - 6 character classes (Knight, Archer, Giant, Wizard, Healer, Bomber)
 - Tower combat, projectiles, elixir economy, and tactical card deck controls
-- In-browser canvas gameplay with smooth real-time controls and bot AI
+- Vertical in-browser arena with lane deployments, tower HP, crown scoring, and live elixir HUD for both sides
 
 ## 🚀 Getting Started
 

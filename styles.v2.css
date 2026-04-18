@@ -1330,54 +1330,139 @@ body {
 }
 
 
+
 .clash-card {
-    background: linear-gradient(145deg, #ffffff 0%, #f3f6ff 100%);
+    background: linear-gradient(150deg, #ffffff 0%, #eef3ff 100%);
 }
 
-#clash-game {
-    line-height: 1.5;
+.clash-panel {
+    background: linear-gradient(180deg, #f7f9ff 0%, #eef4ff 100%);
 }
 
-.clash-hud {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(120px, 1fr));
-    gap: 10px;
-    margin-bottom: 12px;
+.clash-topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+#clash-status {
+    color: #2c3b67;
+    font-size: 1rem;
+}
+
+#clash-substatus {
+    margin: 2px 0 0;
+    color: #5d6c90;
+    font-size: 0.9rem;
+}
+
+.clash-time-pill {
+    background: #2f4782;
+    color: white;
+    border-radius: 999px;
+    padding: 8px 14px;
     font-weight: 700;
-    color: #2d3c61;
+    min-width: 64px;
+    text-align: center;
+}
+
+.clash-scoreband {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.76);
+    border: 1px solid rgba(92, 108, 255, 0.16);
+    margin-bottom: 12px;
+}
+
+.clash-team {
+    display: flex;
+    flex-direction: column;
+    font-size: 0.82rem;
+    color: #48577d;
+}
+
+.clash-team.enemy {
+    align-items: flex-start;
+}
+
+.clash-team.player {
+    align-items: flex-end;
+}
+
+.clash-team .label {
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #314268;
+}
+
+.clash-crowns {
+    font-weight: 800;
+    color: #2f4270;
+    white-space: nowrap;
 }
 
 #clash-canvas {
     width: 100%;
-    max-width: 980px;
-    border-radius: 14px;
-    border: 2px solid rgba(92, 108, 255, 0.25);
-    background: #e8f0ff;
+    max-width: 420px;
+    aspect-ratio: 420 / 760;
+    border-radius: 18px;
+    border: 2px solid rgba(92, 108, 255, 0.24);
+    background: #d5e7ff;
     display: block;
     margin: 0 auto;
+    box-shadow: 0 18px 30px rgba(47, 66, 112, 0.18);
 }
 
 .clash-controls {
     margin-top: 14px;
     display: grid;
-    gap: 10px;
+    gap: 8px;
 }
 
 .clash-card-row,
 .clash-action-row {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 7px;
+}
+
+.clash-card-row .control-button,
+.clash-action-row .control-button {
+    border-radius: 12px;
 }
 
 .clash-card-row .control-button.active,
 .clash-action-row .control-button.active {
     background: #647de0;
     color: white;
+    border-color: rgba(100, 125, 224, 0.75);
 }
 
-@media (max-width: 960px) {
-    .clash-hud {
-        grid-template-columns: repeat(2, minmax(120px, 1fr));
+@media (max-width: 560px) {
+    .clash-scoreband {
+        grid-template-columns: 1fr;
+        justify-items: center;
+        text-align: center;
+    }
+
+    .clash-team.enemy,
+    .clash-team.player {
+        align-items: center;
+    }
+
+    .clash-topbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .clash-time-pill {
+        align-self: flex-start;
     }
 }
