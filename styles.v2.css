@@ -1328,3 +1328,25 @@ body {
         bottom: 42px;
     }
 }
+
+.clash-card {
+    background: linear-gradient(145deg, #ffffff 0%, #f3f6ff 100%);
+}
+
+#clash-game {
+    line-height: 1.5;
+}
+
+.clash-steps {
+    margin: 12px 0;
+    padding-left: 24px;
+}
+
+.clash-command {
+    margin: 12px 0 16px;
+    background: #1e293f;
+    color: #dbeafe;
+    border-radius: 12px;
+    padding: 14px;
+    overflow-x: auto;
+}

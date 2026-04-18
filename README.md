@@ -22,6 +22,21 @@ A beautiful, mobile-friendly web application featuring three classic games custo
 - Auto-check support and keyboard navigation
 - 10 refreshed puzzle boards
 
+
+### Clash (Pygame RTS Arena)
+- Real-time lane-based battle inspired by Clash gameplay
+- Playable against adaptive bots across 3 distinct levels/themes
+- 6 character classes (Knight, Archer, Giant, Wizard, Healer, Bomber)
+- Tower combat, projectiles, elixir economy, and tactical card deck controls
+- Keyboard + mouse controls tuned for smooth 60 FPS gameplay
+
+Run the desktop game from repo root:
+
+```bash
+pip install pygame
+python3 clash_of_clans_pygame.py
+```
+
 ## 🚀 Getting Started
 
 ```bash
