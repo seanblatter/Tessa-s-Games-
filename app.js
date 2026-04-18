@@ -511,7 +511,7 @@ async function loadLeaderboards(game, mode = 'daily') {
         }
         const globalCount = renderLeaderboard('global-leaderboard', globalSnapshot, mode, false, true, game);
         if (globalCount === 0) {
-            renderCurrentUserLeaderboardFallback('global-leaderboard', game);
+            await renderCurrentUserLeaderboardFallback('global-leaderboard', game, mode);
         }
 
         if (currentUser) {
@@ -534,7 +534,7 @@ async function loadLeaderboards(game, mode = 'daily') {
                 }
                 const friendCount = renderLeaderboard('friends-leaderboard', friendSnapshot, mode, true, true, game);
                 if (friendCount === 0) {
-                    renderCurrentUserLeaderboardFallback('friends-leaderboard', game);
+                    await renderCurrentUserLeaderboardFallback('friends-leaderboard', game, mode);
                 }
             } else {
                 document.getElementById('friends-leaderboard').innerHTML = '<li>No friends yet.</li>';
@@ -590,22 +590,72 @@ function renderLeaderboard(elementId, snapshot, mode = 'daily', dedupeByUser = f
     return renderedCount;
 }
 
-function renderCurrentUserLeaderboardFallback(elementId, game) {
+async function renderCurrentUserLeaderboardFallback(elementId, game, mode = 'daily') {
     const list = document.getElementById(elementId);
     if (!list || !currentUser) {
         if (list) list.innerHTML = '<li>No scores yet.</li>';
         return;
     }
-    const cached = dailyScoresCache[game];
-    if (!cached || typeof cached.score !== 'number') {
+    let fallbackScore = null;
+    if (mode === 'daily') {
+        const cached = dailyScoresCache[game];
+        if (cached && typeof cached.score === 'number') {
+            fallbackScore = cached.score;
+        }
+    } else if (firebase) {
+        try {
+            const scoresRef = firebase.collection(firebase.db, 'scores');
+            let snapshot;
+            try {
+                snapshot = await firebase.getDocs(firebase.query(
+                    scoresRef,
+                    firebase.where('uid', '==', currentUser.uid),
+                    firebase.where('game', '==', game),
+                    firebase.orderBy('score', 'desc'),
+                    firebase.limit(1)
+                ));
+            } catch (error) {
+                snapshot = await firebase.getDocs(firebase.query(
+                    scoresRef,
+                    firebase.where('uid', '==', currentUser.uid),
+                    firebase.where('game', '==', game),
+                    firebase.limit(100)
+                ));
+            }
+            if (!snapshot.empty) {
+                const entries = snapshot.docs.map((docSnap) => docSnap.data());
+                entries.sort((a, b) => (b.score || 0) - (a.score || 0));
+                fallbackScore = entries[0]?.score ?? null;
+            }
+        } catch (error) {
+            // Continue with no score fallback.
+        }
+    }
+
+    if (typeof fallbackScore !== 'number') {
         list.innerHTML = '<li>No scores yet.</li>';
         return;
     }
-    const avatar = currentUser.photoURL || 'https://www.gravatar.com/avatar/?d=mp';
+
+    let avatar = currentUser.photoURL || '';
+    if (firebase) {
+        try {
+            const userSnap = await firebase.getDoc(firebase.doc(firebase.db, 'users', currentUser.uid));
+            if (userSnap.exists() && userSnap.data().photoURL) {
+                avatar = userSnap.data().photoURL;
+            }
+        } catch (error) {
+            // Ignore and use auth photoURL fallback.
+        }
+    }
+    if (!avatar) {
+        avatar = 'https://www.gravatar.com/avatar/?d=mp';
+    }
+
     list.innerHTML = `
         <li>
             <img class="leader-avatar" src="${avatar}" alt="${currentUser.displayName || 'Player'}">
-            <span>${currentUser.displayName || 'You'} · ${cached.score}</span>
+            <span>${currentUser.displayName || 'You'} · ${fallbackScore}</span>
         </li>
     `;
 }
