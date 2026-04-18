@@ -112,6 +112,11 @@
                     <span class="game-name">Sudoku</span>
                     <span class="game-desc">Classic 9x9 number puzzle</span>
                 </button>
+                <button class="game-button clash-card" onclick="showGame('clash')">
+                    <span class="game-icon">⚔️</span>
+                    <span class="game-name">Clash</span>
+                    <span class="game-desc">Launch the real-time Pygame bot arena</span>
+                </button>
             </div>
         </div>
 
@@ -199,6 +204,56 @@
             </div>
         </div>
 
+
+        <!-- Clash Game -->
+        <div id="clash-screen" class="screen">
+            <div class="game-header">
+                <button class="back-button" onclick="showMenu()">← Back</button>
+                <h2>Clash</h2>
+                <button class="new-game-button" onclick="initClash(true)">New Match</button>
+            </div>
+            <div id="clash-game" class="panel clash-panel">
+                <div class="clash-topbar">
+                    <div>
+                        <strong id="clash-status">Level 1 · Emerald Keep</strong>
+                        <p id="clash-substatus">Capture more crowns before time ends.</p>
+                    </div>
+                    <div class="clash-time-pill" id="clash-timer">3:00</div>
+                </div>
+
+                <div class="clash-scoreband" aria-label="Live score">
+                    <div class="clash-team enemy">
+                        <span class="label">Bot</span>
+                        <span id="clash-bot-elixir">Elixir 5.0</span>
+                    </div>
+                    <div class="clash-crowns" id="clash-score">👑 0 : 0 👑</div>
+                    <div class="clash-team player">
+                        <span class="label">You</span>
+                        <span id="clash-player-elixir">Elixir 5.0</span>
+                    </div>
+                </div>
+
+                <canvas id="clash-canvas" width="380" height="560" aria-label="Clash battle arena"></canvas>
+
+                <div class="clash-controls">
+                    <div class="clash-card-row" role="group" aria-label="Choose troop">
+                        <button class="control-button active" data-clash-card="knight">⚔️ 3</button>
+                        <button class="control-button" data-clash-card="archer">🏹 3</button>
+                        <button class="control-button" data-clash-card="giant">🛡️ 5</button>
+                        <button class="control-button" data-clash-card="wizard">🧙 4</button>
+                        <button class="control-button" data-clash-card="bomber">💣 3</button>
+                        <button class="control-button" data-clash-card="healer">💚 4</button>
+                    </div>
+                    <div class="clash-action-row" role="group" aria-label="Arena controls">
+                        <span class="clash-inline-elixir" id="clash-player-elixir-inline">Elixir 5.0</span>
+                        <button id="clash-restart" class="secondary-button">Restart</button>
+                        <button id="clash-next-level" class="secondary-button">Next Arena</button>
+                    </div>
+                </div>
+                <p id="clash-message" class="message">Tap a troop card, then tap anywhere on your side of the arena (below the river) to deploy.</p>
+            </div>
+        </div>
+
         <!-- Sudoku Game -->
         <div id="sudoku-screen" class="screen">
             <div class="game-header">
@@ -270,6 +325,7 @@
     <script src="wordle.js"></script>
     <script src="spellingbee.js"></script>
     <script src="sudoku.js"></script>
+    <script src="clash.js"></script>
     <script type="module">
       // Import the functions you need from the SDKs you need
       import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
