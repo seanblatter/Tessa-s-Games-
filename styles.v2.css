@@ -1418,6 +1418,7 @@ body {
     display: block;
     margin: 0 auto;
     box-shadow: 0 18px 30px rgba(47, 66, 112, 0.18);
+    touch-action: none;
 }
 
 .clash-controls {
@@ -1426,16 +1427,24 @@ body {
     gap: 8px;
 }
 
-.clash-card-row,
+.clash-card-row {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+}
+
 .clash-action-row {
     display: flex;
-    flex-wrap: wrap;
-    gap: 7px;
+    gap: 8px;
+    justify-content: flex-end;
 }
 
 .clash-card-row .control-button,
 .clash-action-row .control-button {
     border-radius: 12px;
+    white-space: nowrap;
 }
 
 .clash-card-row .control-button.active,
