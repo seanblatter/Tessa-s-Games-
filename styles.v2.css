@@ -1458,6 +1458,10 @@ body {
 
 @media (max-width: 560px) {
     .clash-scoreband {
+        display: none;
+    }
+
+    .clash-scoreband {
         grid-template-columns: 1fr;
         justify-items: center;
         text-align: center;

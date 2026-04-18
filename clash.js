@@ -23,7 +23,7 @@
         giant: { emoji: '🛡️', cost: 5, hp: 960, speed: 52, damage: 88, cooldown: 1.15, range: 20, radius: 17, color: '#e09a4f', projectileSpeed: 0, splash: 0, towerFocus: true, healPower: 0, bombDamage: 0 },
         wizard: { emoji: '🧙', cost: 4, hp: 320, speed: 63, damage: 43, cooldown: 1, range: 132, radius: 12, color: '#9d6bf8', projectileSpeed: 255, splash: 48, towerFocus: false, healPower: 0, bombDamage: 0 },
         bomber: { emoji: '💣', cost: 3, hp: 250, speed: 66, damage: 0, cooldown: 0.15, range: 16, radius: 11, color: '#ff7584', projectileSpeed: 0, splash: 64, towerFocus: false, healPower: 0, bombDamage: 140 },
-        healer: { emoji: '💚', cost: 4, hp: 280, speed: 62, damage: 0, cooldown: 0.8, range: 125, radius: 11, color: '#e4c15d', projectileSpeed: 220, splash: 0, towerFocus: false, healPower: 62, bombDamage: 0 }
+        healer: { emoji: '💚', cost: 4, hp: 280, speed: 62, damage: 14, cooldown: 0.8, range: 125, radius: 11, color: '#e4c15d', projectileSpeed: 0, splash: 0, towerFocus: false, healPower: 62, bombDamage: 0 }
     };
 
     const TOWER_TEMPLATE = {
@@ -83,7 +83,7 @@
             ctx.strokeStyle = 'rgba(19,31,53,0.36)';
             ctx.lineWidth = 2;
             ctx.stroke();
-            ctx.font = '17px serif';
+            ctx.font = '20px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillText(data.emoji, size / 2, size / 2 + 1);
@@ -328,15 +328,18 @@
                 if (unit.cardId === 'healer') {
                     const ally = this.pickHealTarget(unit, d);
                     if (ally) {
-                        const distToAlly = distance(unit.x, unit.y, ally.x, ally.y);
+                        const dx = ally.x - unit.x;
+                        const dy = ally.y - unit.y;
+                        const distToAlly = Math.hypot(dx, dy);
                         if (distToAlly <= d.range) {
                             if (unit.attackTimer <= 0) {
                                 this.heal(ally, d.healPower);
                                 unit.attackTimer = d.cooldown;
                             }
-                        } else {
-                            unit.x += (ally.x - unit.x) * dt * 1.9;
-                            unit.y += (ally.y - unit.y) * dt * 1.9;
+                        } else if (distToAlly > 0) {
+                            const step = Math.min(distToAlly, d.speed * 0.78 * dt);
+                            unit.x += (dx / distToAlly) * step;
+                            unit.y += (dy / distToAlly) * step;
                         }
                         continue;
                     }
@@ -363,10 +366,13 @@
 
         pickHealTarget(unit, data) {
             const allies = [...this.units.filter((u) => u.alive && u.team === unit.team), ...this.towers.filter((t) => t.alive && t.team === unit.team)]
-                .filter((a) => a.id !== unit.id && a.hp < a.maxHp * 0.97)
-                .sort((a, b) => (a.hp / a.maxHp) - (b.hp / b.maxHp));
+                .filter((a) => a.id !== unit.id && a.hp < a.maxHp * 0.97);
             if (!allies.length) return null;
-            return allies[0];
+            return allies.sort((a, b) => {
+                const aScore = (a.hp / a.maxHp) + distance(unit.x, unit.y, a.x, a.y) / 500;
+                const bScore = (b.hp / b.maxHp) + distance(unit.x, unit.y, b.x, b.y) / 500;
+                return aScore - bScore;
+            })[0];
         }
 
         pickTarget(unit, data) {
@@ -406,6 +412,13 @@
                 return;
             }
             if (data.healPower > 0) {
+                if (target.kind) {
+                    const nearbyEnemies = this.units.filter((u) => u.alive && u.team !== unit.team && distance(u.x, u.y, unit.x, unit.y) < 90).length;
+                    if (nearbyEnemies === 0) {
+                        this.damage(target, data.damage * towerBoost);
+                        return;
+                    }
+                }
                 this.heal(target, data.healPower);
                 return;
             }
@@ -500,6 +513,12 @@
             ctx.fillStyle = p.fieldB;
             ctx.fillRect(16, 14, CANVAS_WIDTH - 32, (CANVAS_HEIGHT - 28) / 2);
 
+            ctx.fillStyle = 'rgba(255,255,255,0.35)';
+            ctx.beginPath();
+            ctx.ellipse(78, 48, 34, 12, 0, 0, Math.PI * 2);
+            ctx.ellipse(CANVAS_WIDTH - 88, 54, 40, 13, 0, 0, Math.PI * 2);
+            ctx.fill();
+
             this.drawArenaOrnaments(ctx, p);
             this.drawDeploymentHint(ctx);
             this.drawTowers(ctx);
@@ -549,6 +568,10 @@
                 const d = UNITS[u.cardId];
                 const sprite = this.assets.units[u.cardId];
                 if (sprite) ctx.drawImage(sprite, u.x - sprite.width / 2, u.y - sprite.height / 2);
+                ctx.font = '17px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(d.emoji, u.x, u.y + 1);
                 this.drawHealthBar(ctx, u.x - 15, u.y - d.radius - 10, 30, 4, u.hp, u.maxHp);
             }
         }
