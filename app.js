@@ -355,7 +355,11 @@ function closeMenuDropdown() {
 
 // Scores and leaderboard
 function getTodayKey() {
-    return new Date().toISOString().split('T')[0];
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
 }
 
 function formatDuration(durationSeconds) {
@@ -367,6 +371,39 @@ function formatDuration(durationSeconds) {
 
 function formatGameLabel(game) {
     return gameLabels[game] || game;
+}
+
+function buildDailyCacheEntry(game, details = {}, date = getTodayKey()) {
+    return {
+        game,
+        date,
+        score: scoreForGame(game, details),
+        attempts: details.attempts || null,
+        durationSeconds: details.durationSeconds || null,
+        wordlePattern: details.wordlePattern || null,
+        wordsFound: details.wordsFound || null
+    };
+}
+
+function renderDailyScoresFromCache() {
+    const container = document.getElementById('dropdown-scores');
+    if (!container) return;
+    container.innerHTML = '';
+    games.forEach((game) => {
+        const data = dailyScoresCache[game];
+        const displayValue = (() => {
+            if (!data) return '—';
+            if (game === 'wordle') return data.wordlePattern || '—';
+            if (game === 'spellingbee') return `${data.wordsFound || 0} words`;
+            if (game === 'sudoku') return formatDuration(data.durationSeconds);
+            return data.score ?? '—';
+        })();
+        const row = document.createElement('div');
+        row.className = 'score-row';
+        row.innerHTML = `<span>${formatGameLabel(game)}</span><span>${displayValue}</span>`;
+        container.appendChild(row);
+    });
+    updateDailyGameLockUI();
 }
 
 function setScoresMode(mode) {
@@ -400,7 +437,12 @@ function scoreForGame(game, details) {
 async function recordScore(game, details = {}) {
     if (!firebase || !currentUser) return;
     const date = getTodayKey();
+    if (dailyScoresCache[game] && game !== 'spellingbee') {
+        return;
+    }
     const score = scoreForGame(game, details);
+    dailyScoresCache[game] = buildDailyCacheEntry(game, details, date);
+    renderDailyScoresFromCache();
     const scoreRef = firebase.doc(firebase.db, 'scores', `${currentUser.uid}_${game}_${date}`);
     const userRef = firebase.doc(firebase.db, 'users', currentUser.uid);
     const userSnap = await firebase.getDoc(userRef);
@@ -418,6 +460,8 @@ async function recordScore(game, details = {}) {
         wordsFound: details.wordsFound || null,
         updatedAt: firebase.serverTimestamp()
     }, { merge: true });
+    dailyScoresCache[game] = buildDailyCacheEntry(game, details, date);
+    renderDailyScoresFromCache();
     await loadDailyScores();
     const scoresScreen = document.getElementById('scores-screen');
     if (scoresScreen?.classList.contains('active')) {
@@ -439,67 +483,74 @@ async function loadDailyScores() {
         scores[docSnap.data().game] = docSnap.data();
     });
     dailyScoresCache = scores;
-    const container = document.getElementById('dropdown-scores');
-    container.innerHTML = '';
-    games.forEach((game) => {
-        const data = scores[game];
-        const displayValue = (() => {
-            if (!data) return '—';
-            if (game === 'wordle') return data.wordlePattern || '—';
-            if (game === 'spellingbee') return `${data.wordsFound || 0} words`;
-            if (game === 'sudoku') return formatDuration(data.durationSeconds);
-            return data.score ?? '—';
-        })();
-        const row = document.createElement('div');
-        row.className = 'score-row';
-        row.innerHTML = `<span>${formatGameLabel(game)}</span><span>${displayValue}</span>`;
-        container.appendChild(row);
-    });
-    updateDailyGameLockUI();
+    renderDailyScoresFromCache();
 }
 
 async function loadLeaderboards(game, mode = 'daily') {
     if (!firebase) return;
-    document.getElementById('global-leaderboard').innerHTML = '';
-    document.getElementById('friends-leaderboard').innerHTML = '';
+    const globalEl = document.getElementById('global-leaderboard');
+    const friendsEl = document.getElementById('friends-leaderboard');
+    globalEl.innerHTML = '<li>Loading…</li>';
+    friendsEl.innerHTML = '<li>Loading…</li>';
 
-    const scoresRef = firebase.collection(firebase.db, 'scores');
-    const globalConstraints = [
-        firebase.where('game', '==', game)
-    ];
-    if (mode === 'daily') {
-        globalConstraints.push(firebase.where('date', '==', getTodayKey()));
-    }
-    globalConstraints.push(firebase.orderBy('score', 'desc'));
-    globalConstraints.push(firebase.limit(30));
-    const globalSnapshot = await firebase.getDocs(firebase.query(scoresRef, ...globalConstraints));
-    renderLeaderboard('global-leaderboard', globalSnapshot, mode);
-
-    if (currentUser) {
-        const friends = await getFriendIds();
-        if (friends.length) {
-            const friendConstraints = [
-                firebase.where('game', '==', game),
-                firebase.where('uid', 'in', friends.slice(0, 10))
-            ];
-            if (mode === 'daily') {
-                friendConstraints.push(firebase.where('date', '==', getTodayKey()));
-            }
-            friendConstraints.push(firebase.orderBy('score', 'desc'));
-            friendConstraints.push(firebase.limit(50));
-            const friendSnapshot = await firebase.getDocs(firebase.query(scoresRef, ...friendConstraints));
-            renderLeaderboard('friends-leaderboard', friendSnapshot, mode, true);
-        } else {
-            document.getElementById('friends-leaderboard').innerHTML = '<li>No friends yet.</li>';
+    try {
+        const scoresRef = firebase.collection(firebase.db, 'scores');
+        const globalConstraints = [
+            firebase.where('game', '==', game)
+        ];
+        if (mode === 'daily') {
+            globalConstraints.push(firebase.where('date', '==', getTodayKey()));
         }
+        let globalSnapshot;
+        try {
+            const sortedConstraints = [...globalConstraints, firebase.orderBy('score', 'desc'), firebase.limit(30)];
+            globalSnapshot = await firebase.getDocs(firebase.query(scoresRef, ...sortedConstraints));
+        } catch (error) {
+            const fallbackConstraints = [...globalConstraints, firebase.limit(50)];
+            globalSnapshot = await firebase.getDocs(firebase.query(scoresRef, ...fallbackConstraints));
+        }
+        const globalCount = renderLeaderboard('global-leaderboard', globalSnapshot, mode, false, true, game);
+        if (globalCount === 0) {
+            await renderCurrentUserLeaderboardFallback('global-leaderboard', game, mode);
+        }
+
+        if (currentUser) {
+            const friends = await getFriendIds();
+            if (friends.length) {
+                const friendConstraints = [
+                    firebase.where('game', '==', game),
+                    firebase.where('uid', 'in', friends.slice(0, 10))
+                ];
+                if (mode === 'daily') {
+                    friendConstraints.push(firebase.where('date', '==', getTodayKey()));
+                }
+                let friendSnapshot;
+                try {
+                    const sortedFriendConstraints = [...friendConstraints, firebase.orderBy('score', 'desc'), firebase.limit(50)];
+                    friendSnapshot = await firebase.getDocs(firebase.query(scoresRef, ...sortedFriendConstraints));
+                } catch (error) {
+                    const fallbackFriendConstraints = [...friendConstraints, firebase.limit(80)];
+                    friendSnapshot = await firebase.getDocs(firebase.query(scoresRef, ...fallbackFriendConstraints));
+                }
+                const friendCount = renderLeaderboard('friends-leaderboard', friendSnapshot, mode, true, true, game);
+                if (friendCount === 0) {
+                    await renderCurrentUserLeaderboardFallback('friends-leaderboard', game, mode);
+                }
+            } else {
+                document.getElementById('friends-leaderboard').innerHTML = '<li>No friends yet.</li>';
+            }
+        }
+    } catch (error) {
+        globalEl.innerHTML = '<li>Unable to load leaderboard right now.</li>';
+        friendsEl.innerHTML = '<li>Unable to load leaderboard right now.</li>';
     }
 }
 
-function renderLeaderboard(elementId, snapshot, mode = 'daily', dedupeByUser = false) {
+function renderLeaderboard(elementId, snapshot, mode = 'daily', dedupeByUser = false, sortByScore = false, game = '') {
     const list = document.getElementById(elementId);
     if (snapshot.empty) {
-        list.innerHTML = '<li>No scores yet.</li>';
-        return;
+        list.innerHTML = '';
+        return 0;
     }
     list.innerHTML = '';
     const entries = [];
@@ -516,10 +567,17 @@ function renderLeaderboard(elementId, snapshot, mode = 'daily', dedupeByUser = f
         });
         finalEntries = Object.values(bestByUser).sort((a, b) => b.score - a.score).slice(0, 10);
     } else {
-        finalEntries = entries.slice(0, 10);
+        finalEntries = entries.slice();
     }
 
+    if (sortByScore) {
+        finalEntries.sort((a, b) => (b.score || 0) - (a.score || 0));
+    }
+    finalEntries = finalEntries.slice(0, 10);
+
+    let renderedCount = 0;
     finalEntries.forEach((data) => {
+        if (game && data.game && data.game !== game) return;
         const item = document.createElement('li');
         const avatar = data.photoURL || 'https://www.gravatar.com/avatar/?d=mp';
         item.innerHTML = `
@@ -527,7 +585,79 @@ function renderLeaderboard(elementId, snapshot, mode = 'daily', dedupeByUser = f
             <span>${data.displayName || data.uid} · ${data.score}</span>
         `;
         list.appendChild(item);
+        renderedCount += 1;
     });
+    return renderedCount;
+}
+
+async function renderCurrentUserLeaderboardFallback(elementId, game, mode = 'daily') {
+    const list = document.getElementById(elementId);
+    if (!list || !currentUser) {
+        if (list) list.innerHTML = '<li>No scores yet.</li>';
+        return;
+    }
+    let fallbackScore = null;
+    if (mode === 'daily') {
+        const cached = dailyScoresCache[game];
+        if (cached && typeof cached.score === 'number') {
+            fallbackScore = cached.score;
+        }
+    } else if (firebase) {
+        try {
+            const scoresRef = firebase.collection(firebase.db, 'scores');
+            let snapshot;
+            try {
+                snapshot = await firebase.getDocs(firebase.query(
+                    scoresRef,
+                    firebase.where('uid', '==', currentUser.uid),
+                    firebase.where('game', '==', game),
+                    firebase.orderBy('score', 'desc'),
+                    firebase.limit(1)
+                ));
+            } catch (error) {
+                snapshot = await firebase.getDocs(firebase.query(
+                    scoresRef,
+                    firebase.where('uid', '==', currentUser.uid),
+                    firebase.where('game', '==', game),
+                    firebase.limit(100)
+                ));
+            }
+            if (!snapshot.empty) {
+                const entries = snapshot.docs.map((docSnap) => docSnap.data());
+                entries.sort((a, b) => (b.score || 0) - (a.score || 0));
+                fallbackScore = entries[0]?.score ?? null;
+            }
+        } catch (error) {
+            // Continue with no score fallback.
+        }
+    }
+
+    if (typeof fallbackScore !== 'number') {
+        list.innerHTML = '<li>No scores yet.</li>';
+        return;
+    }
+
+    let avatar = currentUser.photoURL || '';
+    if (firebase) {
+        try {
+            const userSnap = await firebase.getDoc(firebase.doc(firebase.db, 'users', currentUser.uid));
+            if (userSnap.exists() && userSnap.data().photoURL) {
+                avatar = userSnap.data().photoURL;
+            }
+        } catch (error) {
+            // Ignore and use auth photoURL fallback.
+        }
+    }
+    if (!avatar) {
+        avatar = 'https://www.gravatar.com/avatar/?d=mp';
+    }
+
+    list.innerHTML = `
+        <li>
+            <img class="leader-avatar" src="${avatar}" alt="${currentUser.displayName || 'Player'}">
+            <span>${currentUser.displayName || 'You'} · ${fallbackScore}</span>
+        </li>
+    `;
 }
 
 async function renderProfile() {
@@ -800,8 +930,23 @@ function updateDailyGameLockUI() {
     });
 }
 
-window.canPlayDailyGame = (game) => {
+window.canPlayDailyGame = async (game) => {
     if (dailyScoresCache[game]) {
+        showMessage(game, 'You already played today. Come back tomorrow!', 'info');
+        return false;
+    }
+    if (!firebase || !currentUser) return true;
+    const snapshot = await firebase.getDocs(firebase.query(
+        firebase.collection(firebase.db, 'scores'),
+        firebase.where('uid', '==', currentUser.uid),
+        firebase.where('game', '==', game),
+        firebase.where('date', '==', getTodayKey()),
+        firebase.limit(1)
+    ));
+    if (!snapshot.empty) {
+        const scoreData = snapshot.docs[0].data();
+        dailyScoresCache[game] = scoreData;
+        updateDailyGameLockUI();
         showMessage(game, 'You already played today. Come back tomorrow!', 'info');
         return false;
     }
@@ -809,3 +954,8 @@ window.canPlayDailyGame = (game) => {
 };
 
 window.recordScore = recordScore;
+window.getCurrentUser = () => currentUser;
+window.lockDailyGameNow = (game, details = {}) => {
+    dailyScoresCache[game] = buildDailyCacheEntry(game, details, getTodayKey());
+    renderDailyScoresFromCache();
+};

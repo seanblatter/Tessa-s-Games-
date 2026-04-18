@@ -844,6 +844,51 @@ body {
     width: fit-content;
 }
 
+.sudoku-footer {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 8px auto 16px;
+    max-width: 100%;
+}
+
+.sudoku-history-track {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 4px 2px 8px;
+}
+
+.sudoku-circle {
+    flex: 0 0 auto;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid rgba(31, 36, 48, 0.25);
+    background: #f6f8ff;
+    color: #1f2430;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.sudoku-circle.solved {
+    background: #dce3ff;
+    border-color: rgba(52, 73, 255, 0.6);
+}
+
+.sudoku-circle.active {
+    box-shadow: 0 0 0 2px rgba(52, 73, 255, 0.35);
+}
+
+.sudoku-game-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-weight: 600;
+    color: var(--muted);
+    padding: 0 4px;
+}
+
 #number-pad {
     display: grid;
     grid-template-columns: repeat(5, 1fr);

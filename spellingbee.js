@@ -90,20 +90,28 @@ async function endSpellingBeeGame(options = {}) {
     if (beeState.gameOver) return;
 
     beeState.gameOver = true;
+    beeState.isSubmitting = false;
     beeState.currentWord = '';
     renderBeeEntry();
 
     const durationSeconds = Math.round((Date.now() - beeState.startTime) / 1000);
-
-    await saveSpellingBeeScore({
+    const finalDetails = {
         durationSeconds,
         wordsFound: beeState.foundWords.size,
         score: beeState.score
-    });
+    };
+
+    if (window.lockDailyGameNow) {
+        window.lockDailyGameNow('spellingbee', finalDetails);
+    }
 
     if (!silent) {
         showMessage('spellingbee', message, 'info');
     }
+
+    saveSpellingBeeScore(finalDetails).catch(() => {
+        showMessage('spellingbee', 'Saved locally. Syncing score when connection is ready.', 'info');
+    });
 }
 
 function pointsForBeeWord(word) {
@@ -246,6 +254,9 @@ async function submitBeeWord() {
     if (beeState.gameOver || beeState.isSubmitting) return;
 
     const word = beeState.currentWord.toUpperCase();
+    beeState.currentWord = '';
+    renderBeeEntry();
+
     const allowed = new Set([beeState.puzzle.center, ...beeState.puzzle.outer]);
 
     if (word.length < 4) {
@@ -266,11 +277,7 @@ async function submitBeeWord() {
         const valid = await isDictionaryWord(word);
         beeState.isSubmitting = false;
 
-        if (beeState.gameOver) {
-            beeState.currentWord = '';
-            renderBeeEntry();
-            return;
-        }
+        if (beeState.gameOver) return;
 
         if (!valid) {
             showMessage('spellingbee', 'Not a valid dictionary word.', 'error');
@@ -293,8 +300,6 @@ async function submitBeeWord() {
         }
     }
 
-    beeState.currentWord = '';
-    renderBeeEntry();
 }
 
 document.addEventListener('keydown', (e) => {
