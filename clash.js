@@ -28,7 +28,7 @@
         },
         {
             name: 'Sunfire Bastion',
-            duration: 190,
+            duration: 180,
             elixirRegen: 0.88,
             botBonus: 0.18,
             botSkill: 1.07,
@@ -43,7 +43,7 @@
         },
         {
             name: 'Frost Crown',
-            duration: 200,
+            duration: 180,
             elixirRegen: 0.92,
             botBonus: 0.24,
             botSkill: 1.22,
@@ -59,12 +59,12 @@
     ];
 
     const UNITS = {
-        knight: { name: 'Knight', cost: 3, hp: 420, speed: 74, damage: 54, cooldown: 0.84, range: 18, radius: 12, color: '#4d7bde', projectileSpeed: 0, splash: 0, towerFocus: false, healPower: 0 },
-        archer: { name: 'Archer', cost: 3, hp: 230, speed: 66, damage: 34, cooldown: 0.95, range: 150, radius: 11, color: '#44ba84', projectileSpeed: 290, splash: 0, towerFocus: false, healPower: 0 },
-        giant: { name: 'Giant', cost: 5, hp: 960, speed: 52, damage: 88, cooldown: 1.15, range: 20, radius: 17, color: '#e09a4f', projectileSpeed: 0, splash: 0, towerFocus: true, healPower: 0 },
-        wizard: { name: 'Wizard', cost: 4, hp: 320, speed: 63, damage: 43, cooldown: 1, range: 132, radius: 12, color: '#9d6bf8', projectileSpeed: 255, splash: 48, towerFocus: false, healPower: 0 },
-        bomber: { name: 'Bomber', cost: 3, hp: 250, speed: 60, damage: 58, cooldown: 1.2, range: 118, radius: 11, color: '#ff7584', projectileSpeed: 240, splash: 64, towerFocus: false, healPower: 0 },
-        healer: { name: 'Healer', cost: 4, hp: 280, speed: 70, damage: 0, cooldown: 0.9, range: 110, radius: 11, color: '#e4c15d', projectileSpeed: 220, splash: 0, towerFocus: false, healPower: 52 }
+        knight: { emoji: '⚔️', name: 'Knight', cost: 3, hp: 420, speed: 74, damage: 54, cooldown: 0.84, range: 18, radius: 12, color: '#4d7bde', projectileSpeed: 0, splash: 0, towerFocus: false, healPower: 0 },
+        archer: { emoji: '🏹', name: 'Archer', cost: 3, hp: 230, speed: 66, damage: 34, cooldown: 0.95, range: 150, radius: 11, color: '#44ba84', projectileSpeed: 290, splash: 0, towerFocus: false, healPower: 0 },
+        giant: { emoji: '🛡️', name: 'Giant', cost: 5, hp: 960, speed: 52, damage: 88, cooldown: 1.15, range: 20, radius: 17, color: '#e09a4f', projectileSpeed: 0, splash: 0, towerFocus: true, healPower: 0 },
+        wizard: { emoji: '🧙', name: 'Wizard', cost: 4, hp: 320, speed: 63, damage: 43, cooldown: 1, range: 132, radius: 12, color: '#9d6bf8', projectileSpeed: 255, splash: 48, towerFocus: false, healPower: 0 },
+        bomber: { emoji: '💣', name: 'Bomber', cost: 3, hp: 250, speed: 60, damage: 58, cooldown: 1.2, range: 118, radius: 11, color: '#ff7584', projectileSpeed: 240, splash: 64, towerFocus: false, healPower: 0 },
+        healer: { emoji: '💚', name: 'Healer', cost: 4, hp: 280, speed: 70, damage: 0, cooldown: 0.9, range: 110, radius: 11, color: '#e4c15d', projectileSpeed: 220, splash: 0, towerFocus: false, healPower: 52 }
     };
 
     const TOWER_TEMPLATE = {
@@ -79,7 +79,6 @@
         constructor() {
             this.canvas = document.getElementById('clash-canvas');
             this.ctx = this.canvas ? this.canvas.getContext('2d') : null;
-
             this.units = [];
             this.towers = [];
             this.projectiles = [];
@@ -88,7 +87,6 @@
             this.running = false;
             this.lastTs = 0;
             this.stateVersion = '';
-
             this.resetMatch(true);
         }
 
@@ -100,10 +98,17 @@
             return LANES_X.reduce((best, laneX) => Math.abs(laneX - x) < Math.abs(best - x) ? laneX : best, LANES_X[1]);
         }
 
+        enemyKing(team) {
+            return this.towers.find((t) => t.team !== team && t.kind === 'king' && t.alive);
+        }
+
+        enemyPrincessDown(team) {
+            return this.towers.some((t) => t.team !== team && t.kind === 'princess' && !t.alive);
+        }
+
         resetMatch(resetLevel = false) {
             if (resetLevel) this.levelIndex = clamp(this.levelIndex, 0, LEVELS.length - 1);
             const level = this.currentLevel();
-
             this.units = [];
             this.towers = [];
             this.projectiles = [];
@@ -116,36 +121,30 @@
             this.gameOver = false;
             this.winner = null;
             this.statusMessage = 'Pick a troop, then tap your side of arena to deploy.';
-            this.botSpawnTimer = 1.0 + Math.random() * 1.1;
+            this.botSpawnTimer = 0.9 + Math.random() * 1.1;
             this.botBurstCooldown = 0;
-
             this.spawnTowers();
             this.syncHud(true);
         }
 
         spawnTowers() {
             const createTower = (team, kind, x, y) => {
-                const base = TOWER_TEMPLATE[kind];
+                const b = TOWER_TEMPLATE[kind];
                 this.towers.push({
                     id: `${team}-${kind}-${Math.random().toString(36).slice(2, 8)}`,
-                    team,
-                    kind,
-                    x,
-                    y,
-                    hp: base.hp,
-                    maxHp: base.hp,
-                    damage: base.damage,
-                    cooldown: base.cooldown,
-                    range: base.range,
-                    projectileSpeed: base.projectileSpeed,
-                    width: base.width,
-                    height: base.height,
+                    team, kind, x, y,
+                    hp: b.hp, maxHp: b.hp,
+                    damage: b.damage,
+                    cooldown: b.cooldown,
+                    range: b.range,
+                    projectileSpeed: b.projectileSpeed,
+                    width: b.width,
+                    height: b.height,
                     attackTimer: Math.random() * 0.35,
                     alive: true,
                     counted: false
                 });
             };
-
             createTower(TEAM_BOT, 'princess', LANES_X[0], 92);
             createTower(TEAM_BOT, 'princess', LANES_X[2], 92);
             createTower(TEAM_BOT, 'king', LANES_X[1], 52);
@@ -155,8 +154,7 @@
         }
 
         start() {
-            if (!this.canvas || !this.ctx) return;
-            if (this.running) return;
+            if (!this.canvas || !this.ctx || this.running) return;
             this.running = true;
             this.lastTs = performance.now();
             requestAnimationFrame((ts) => this.loop(ts));
@@ -168,41 +166,40 @@
             this.lastTs = ts;
             this.update(dt);
             this.draw();
-            requestAnimationFrame((nextTs) => this.loop(nextTs));
+            requestAnimationFrame((next) => this.loop(next));
         }
 
         deployFromBoard(cardId, x, y) {
             if (this.gameOver) return false;
-            if (y < BRIDGE_Y + 26 || y > CANVAS_HEIGHT - 100) {
+            if (y < BRIDGE_Y + 18 || y > CANVAS_HEIGHT - 16) {
                 this.statusMessage = 'Deploy on your side: tap below the bridge.';
                 return false;
             }
             const data = UNITS[cardId];
             if (!data) return false;
             if (this.playerElixir < data.cost) {
-                this.statusMessage = `Need ${data.cost} elixir for ${data.name}.`;
+                this.statusMessage = `Need ${data.cost} elixir for ${data.emoji}.`;
                 return false;
             }
             this.playerElixir -= data.cost;
             this.spawnUnit(cardId, TEAM_PLAYER, x, y);
-            this.statusMessage = `${data.name} deployed.`;
+            this.statusMessage = `${data.emoji} deployed.`;
             this.syncHud(true);
             return true;
         }
 
         spawnUnit(cardId, team, x, y) {
-            const data = UNITS[cardId];
-            const routeX = this.nearestLaneX(x);
+            const d = UNITS[cardId];
             this.units.push({
                 id: `${team}-${cardId}-${Math.random().toString(36).slice(2, 9)}`,
                 team,
                 cardId,
                 x,
                 y,
-                routeX,
-                hp: data.hp,
-                maxHp: data.hp,
-                attackTimer: Math.random() * data.cooldown,
+                routeX: this.nearestLaneX(x),
+                hp: d.hp,
+                maxHp: d.hp,
+                attackTimer: Math.random() * d.cooldown,
                 alive: true
             });
         }
@@ -212,12 +209,11 @@
                 this.syncHud();
                 return;
             }
-
             const level = this.currentLevel();
             this.timeLeft = Math.max(0, this.timeLeft - dt);
-            const fastRegen = this.timeLeft <= 60 ? 1.34 : 1;
-            this.playerElixir = clamp(this.playerElixir + level.elixirRegen * fastRegen * dt, 0, this.maxElixir);
-            this.botElixir = clamp(this.botElixir + (level.elixirRegen + level.botBonus) * fastRegen * dt, 0, this.maxElixir);
+            const fast = this.timeLeft <= 60 ? 1.34 : 1;
+            this.playerElixir = clamp(this.playerElixir + level.elixirRegen * fast * dt, 0, this.maxElixir);
+            this.botElixir = clamp(this.botElixir + (level.elixirRegen + level.botBonus) * fast * dt, 0, this.maxElixir);
 
             this.updateBot(dt, level);
             this.updateTowers(dt);
@@ -233,13 +229,6 @@
             this.botBurstCooldown = Math.max(0, this.botBurstCooldown - dt);
             if (this.botSpawnTimer > 0) return;
 
-            const laneScores = LANES_X.map((laneX) => {
-                const p = this.units.filter((u) => u.team === TEAM_PLAYER && Math.abs(u.routeX - laneX) < 8).reduce((s, u) => s + u.hp, 0);
-                const b = this.units.filter((u) => u.team === TEAM_BOT && Math.abs(u.routeX - laneX) < 8).reduce((s, u) => s + u.hp, 0);
-                return { laneX, score: p - b + (Math.random() * 220 - 110) };
-            });
-            laneScores.sort((a, b) => b.score - a.score);
-
             const pool = ['knight', 'archer', 'bomber'];
             if (Math.random() < 0.42 * level.botSkill) pool.push('wizard');
             if (Math.random() < 0.35 * level.botSkill) pool.push('giant');
@@ -249,18 +238,20 @@
 
             if (this.botElixir >= data.cost) {
                 this.botElixir -= data.cost;
-                this.spawnUnit(cardId, TEAM_BOT, laneScores[0].laneX + (Math.random() * 12 - 6), 120 + Math.random() * 24);
+                const spawnX = 36 + Math.random() * (CANVAS_WIDTH - 72);
+                const spawnY = 72 + Math.random() * 170;
+                this.spawnUnit(cardId, TEAM_BOT, spawnX, spawnY);
+
                 if (this.botBurstCooldown <= 0 && this.botElixir >= 3 && Math.random() < 0.38 * level.botSkill) {
-                    const supportCard = Math.random() < 0.5 ? 'knight' : 'archer';
-                    if (this.botElixir >= UNITS[supportCard].cost) {
-                        this.botElixir -= UNITS[supportCard].cost;
-                        this.spawnUnit(supportCard, TEAM_BOT, laneScores[Math.floor(Math.random() * 2)].laneX, 120 + Math.random() * 20);
-                        this.botBurstCooldown = 2.2;
+                    const support = Math.random() < 0.5 ? 'knight' : 'archer';
+                    if (this.botElixir >= UNITS[support].cost) {
+                        this.botElixir -= UNITS[support].cost;
+                        this.spawnUnit(support, TEAM_BOT, 36 + Math.random() * (CANVAS_WIDTH - 72), 76 + Math.random() * 150);
+                        this.botBurstCooldown = 2.1;
                     }
                 }
             }
-
-            this.botSpawnTimer = 0.9 + Math.random() * (1.05 / level.botSkill);
+            this.botSpawnTimer = 0.85 + Math.random() * (1.05 / level.botSkill);
         }
 
         updateTowers(dt) {
@@ -272,15 +263,14 @@
                 const enemies = this.units.filter((u) => u.alive && u.team !== tower.team);
                 let target = null;
                 let best = Infinity;
-                for (const unit of enemies) {
-                    const d = distance(tower.x, tower.y, unit.x, unit.y);
-                    if (d <= tower.range && d < best) {
-                        target = unit;
-                        best = d;
+                for (const u of enemies) {
+                    const dist = distance(tower.x, tower.y, u.x, u.y);
+                    if (dist <= tower.range && dist < best) {
+                        target = u;
+                        best = dist;
                     }
                 }
                 if (!target) continue;
-
                 this.projectiles.push({
                     id: `tower-${Math.random().toString(36).slice(2, 8)}`,
                     team: tower.team,
@@ -301,50 +291,70 @@
         updateUnits(dt) {
             for (const unit of this.units) {
                 if (!unit.alive) continue;
-                const data = UNITS[unit.cardId];
+                const d = UNITS[unit.cardId];
                 unit.attackTimer -= dt;
 
-                const target = this.pickTarget(unit, data);
+                if (this.enemyPrincessDown(unit.team)) {
+                    const king = this.enemyKing(unit.team);
+                    if (king) unit.routeX = king.x;
+                }
+
+                const target = this.pickTarget(unit, d);
                 if (target) {
-                    const d = distance(unit.x, unit.y, target.x, target.y);
-                    if (d <= data.range + (target.radius || target.width || 16) * 0.56) {
+                    const dist = distance(unit.x, unit.y, target.x, target.y);
+                    if (dist <= d.range + (target.radius || target.width || 16) * 0.56) {
                         if (unit.attackTimer <= 0) {
-                            this.performAttack(unit, data, target);
-                            unit.attackTimer = data.cooldown;
+                            this.performAttack(unit, d, target);
+                            unit.attackTimer = d.cooldown;
                         }
                         continue;
                     }
                 }
 
                 const direction = unit.team === TEAM_PLAYER ? -1 : 1;
-                const speed = data.speed * (Math.abs(unit.y - BRIDGE_Y) < 58 ? 0.86 : 1);
+                const speed = d.speed * (Math.abs(unit.y - BRIDGE_Y) < 58 ? 0.86 : 1);
                 unit.y += direction * speed * dt;
                 unit.x += (unit.routeX - unit.x) * dt * 4.4;
             }
         }
 
         pickTarget(unit, data) {
+            const crossedBridge = unit.team === TEAM_PLAYER ? unit.y <= BRIDGE_Y - 4 : unit.y >= BRIDGE_Y + 4;
+
             if (data.healPower > 0) {
                 const allies = [
                     ...this.units.filter((u) => u.alive && u.team === unit.team),
                     ...this.towers.filter((t) => t.alive && t.team === unit.team)
-                ].filter((a) => a.id !== unit.id && a.hp < a.maxHp * 0.94 && Math.abs(a.x - unit.x) < data.range + 30 && Math.abs(a.y - unit.y) < data.range + 30);
+                ].filter((a) => a.id !== unit.id && a.hp < a.maxHp * 0.94 && Math.abs(a.x - unit.x) < data.range + 35 && Math.abs(a.y - unit.y) < data.range + 35);
                 if (!allies.length) return null;
                 return allies.reduce((best, a) => (a.hp / a.maxHp < best.hp / best.maxHp ? a : best));
             }
 
-            const enemies = [
-                ...this.units.filter((u) => u.alive && u.team !== unit.team).map((u) => ({ ...u, radius: UNITS[u.cardId].radius })),
-                ...this.towers.filter((t) => t.alive && t.team !== unit.team).map((t) => ({ ...t, radius: 18 }))
-            ].filter((e) => Math.abs(e.y - unit.y) < data.range + 85 && Math.abs(e.x - unit.x) < 70);
+            const enemyUnits = this.units
+                .filter((u) => u.alive && u.team !== unit.team)
+                .map((u) => ({ ...u, radius: UNITS[u.cardId].radius }))
+                .filter((e) => Math.abs(e.y - unit.y) < data.range + 85 && Math.abs(e.x - unit.x) < 72);
 
-            if (!enemies.length) return null;
-            let options = enemies;
-            if (data.towerFocus) {
-                const towers = enemies.filter((e) => e.kind);
-                if (towers.length) options = towers;
+            if (crossedBridge && enemyUnits.length) {
+                return enemyUnits.reduce((best, e) => {
+                    const db = Math.abs(best.y - unit.y) + Math.abs(best.x - unit.x) * 0.25;
+                    const de = Math.abs(e.y - unit.y) + Math.abs(e.x - unit.x) * 0.25;
+                    return de < db ? e : best;
+                });
             }
-            return options.reduce((best, e) => {
+
+            const enemyTowers = this.towers
+                .filter((t) => t.alive && t.team !== unit.team)
+                .map((t) => ({ ...t, radius: 18 }))
+                .filter((e) => Math.abs(e.y - unit.y) < data.range + 85 && Math.abs(e.x - unit.x) < 72);
+
+            let pool = [...enemyUnits, ...enemyTowers];
+            if (data.towerFocus && !crossedBridge) {
+                const towersOnly = pool.filter((p) => p.kind);
+                if (towersOnly.length) pool = towersOnly;
+            }
+            if (!pool.length) return null;
+            return pool.reduce((best, e) => {
                 const db = Math.abs(best.y - unit.y) + Math.abs(best.x - unit.x) * 0.25;
                 const de = Math.abs(e.y - unit.y) + Math.abs(e.x - unit.x) * 0.25;
                 return de < db ? e : best;
@@ -368,26 +378,19 @@
                 });
                 return;
             }
-
             if (data.healPower > 0) {
                 this.heal(target, data.healPower);
                 return;
             }
-
             if (data.splash > 0) {
-                for (const enemy of this.getEnemies(unit.team)) {
-                    if (enemy.alive && distance(enemy.x, enemy.y, target.x, target.y) <= data.splash) this.damage(enemy, data.damage);
+                for (const e of this.getEnemies(unit.team)) {
+                    if (e.alive && distance(e.x, e.y, target.x, target.y) <= data.splash) this.damage(e, data.damage);
                 }
-            } else {
-                this.damage(target, data.damage);
-            }
+            } else this.damage(target, data.damage);
         }
 
         getEnemies(team) {
-            return [
-                ...this.units.filter((u) => u.alive && u.team !== team),
-                ...this.towers.filter((t) => t.alive && t.team !== team)
-            ];
+            return [...this.units.filter((u) => u.alive && u.team !== team), ...this.towers.filter((t) => t.alive && t.team !== team)];
         }
 
         updateProjectiles(dt) {
@@ -400,21 +403,16 @@
                 }
                 const dx = target.x - p.x;
                 const dy = target.y - p.y;
-                const d = Math.hypot(dx, dy);
-                if (d <= p.speed * dt + 5) {
-                    if (p.healPower > 0) {
-                        this.heal(target, p.healPower);
-                    } else if (p.splash > 0) {
-                        for (const enemy of this.getEnemies(p.team)) {
-                            if (enemy.alive && distance(enemy.x, enemy.y, target.x, target.y) <= p.splash) this.damage(enemy, p.damage);
-                        }
-                    } else {
-                        this.damage(target, p.damage);
-                    }
+                const dist = Math.hypot(dx, dy);
+                if (dist <= p.speed * dt + 5) {
+                    if (p.healPower > 0) this.heal(target, p.healPower);
+                    else if (p.splash > 0) {
+                        for (const e of this.getEnemies(p.team)) if (e.alive && distance(e.x, e.y, target.x, target.y) <= p.splash) this.damage(e, p.damage);
+                    } else this.damage(target, p.damage);
                     p.alive = false;
                 } else {
-                    p.x += (dx / d) * p.speed * dt;
-                    p.y += (dy / d) * p.speed * dt;
+                    p.x += (dx / dist) * p.speed * dt;
+                    p.y += (dy / dist) * p.speed * dt;
                 }
             }
         }
@@ -438,21 +436,19 @@
         cleanup() {
             this.units = this.units.filter((u) => u.alive && u.y >= -40 && u.y <= CANVAS_HEIGHT + 40);
             this.projectiles = this.projectiles.filter((p) => p.alive);
-
-            for (const tower of this.towers) {
-                if (tower.alive || tower.counted) continue;
-                if (tower.kind === 'princess') {
-                    if (tower.team === TEAM_PLAYER) this.botCrown += 1;
+            for (const t of this.towers) {
+                if (t.alive || t.counted) continue;
+                if (t.kind === 'princess') {
+                    if (t.team === TEAM_PLAYER) this.botCrown += 1;
                     else this.playerCrown += 1;
                 }
-                tower.counted = true;
+                t.counted = true;
             }
         }
 
         evaluateGameOver() {
             const playerKing = this.towers.find((t) => t.team === TEAM_PLAYER && t.kind === 'king');
             const botKing = this.towers.find((t) => t.team === TEAM_BOT && t.kind === 'king');
-
             if (!playerKing?.alive) {
                 this.gameOver = true;
                 this.winner = TEAM_BOT;
@@ -497,7 +493,6 @@
             sky.addColorStop(1, '#f8fcff');
             ctx.fillStyle = sky;
             ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-
             ctx.fillStyle = p.fieldA;
             ctx.fillRect(18, 22, CANVAS_WIDTH - 36, CANVAS_HEIGHT - 44);
             ctx.fillStyle = p.fieldB;
@@ -517,7 +512,6 @@
             ctx.fillRect(18, BRIDGE_Y - 34, CANVAS_WIDTH - 36, 68);
             ctx.fillStyle = p.bridge;
             for (const x of LANES_X) ctx.fillRect(x - 28, BRIDGE_Y - 42, 56, 84);
-
             ctx.strokeStyle = p.lane;
             ctx.lineWidth = 2;
             for (const x of LANES_X) {
@@ -526,8 +520,6 @@
                 ctx.lineTo(x, CANVAS_HEIGHT - 34);
                 ctx.stroke();
             }
-
-            // arena frame + soft decorations
             ctx.strokeStyle = 'rgba(34,54,93,0.22)';
             ctx.lineWidth = 3;
             ctx.strokeRect(18, 22, CANVAS_WIDTH - 36, CANVAS_HEIGHT - 44);
@@ -541,44 +533,38 @@
         drawDeploymentHint(ctx) {
             if (this.gameOver) return;
             ctx.fillStyle = 'rgba(80, 105, 170, 0.14)';
-            ctx.fillRect(18, BRIDGE_Y + 34, CANVAS_WIDTH - 36, CANVAS_HEIGHT - BRIDGE_Y - 56);
+            ctx.fillRect(18, BRIDGE_Y + 20, CANVAS_WIDTH - 36, CANVAS_HEIGHT - BRIDGE_Y - 36);
             ctx.fillStyle = 'rgba(28,46,84,0.75)';
             ctx.font = '12px Inter, Arial, sans-serif';
-            ctx.fillText('Tap in this zone to deploy selected troop', 96, BRIDGE_Y + 54);
+            ctx.fillText('Tap anywhere below river to deploy selected troop', 74, BRIDGE_Y + 42);
         }
 
         drawTowers(ctx) {
-            for (const tower of this.towers) {
-                if (!tower.alive) continue;
-                const isPlayer = tower.team === TEAM_PLAYER;
-                const body = isPlayer ? '#4c76d5' : '#e05c67';
-                const roof = isPlayer ? '#6f95f0' : '#f7848e';
-
+            for (const t of this.towers) {
+                if (!t.alive) continue;
+                const body = t.team === TEAM_PLAYER ? '#4c76d5' : '#e05c67';
+                const roof = t.team === TEAM_PLAYER ? '#6f95f0' : '#f7848e';
                 ctx.fillStyle = body;
                 ctx.beginPath();
-                ctx.roundRect(tower.x - tower.width / 2, tower.y - tower.height / 2, tower.width, tower.height, 9);
+                ctx.roundRect(t.x - t.width / 2, t.y - t.height / 2, t.width, t.height, 9);
                 ctx.fill();
                 ctx.fillStyle = roof;
-                ctx.fillRect(tower.x - tower.width / 2 + 5, tower.y - tower.height / 2 - 10, tower.width - 10, 14);
-
-                this.drawHealthBar(ctx, tower.x - 24, tower.y - tower.height / 2 - 18, 48, 6, tower.hp, tower.maxHp);
-                this.drawText(ctx, tower.kind === 'king' ? 'K' : 'P', tower.x, tower.y + 4, '#fff', 13, true);
+                ctx.fillRect(t.x - t.width / 2 + 5, t.y - t.height / 2 - 10, t.width - 10, 14);
+                this.drawHealthBar(ctx, t.x - 24, t.y - t.height / 2 - 18, 48, 6, t.hp, t.maxHp);
+                this.drawText(ctx, t.kind === 'king' ? '👑' : '🏰', t.x, t.y + 4, '#fff', 13, true);
             }
         }
 
         drawUnits(ctx) {
-            for (const unit of this.units) {
-                if (!unit.alive) continue;
-                const data = UNITS[unit.cardId];
-                ctx.fillStyle = data.color;
+            for (const u of this.units) {
+                if (!u.alive) continue;
+                const d = UNITS[u.cardId];
+                ctx.fillStyle = d.color;
                 ctx.beginPath();
-                ctx.arc(unit.x, unit.y, data.radius, 0, Math.PI * 2);
+                ctx.arc(u.x, u.y, d.radius, 0, Math.PI * 2);
                 ctx.fill();
-                ctx.fillStyle = unit.team === TEAM_PLAYER ? '#e9efff' : '#ffe6ea';
-                ctx.beginPath();
-                ctx.arc(unit.x, unit.y, Math.max(3, data.radius * 0.34), 0, Math.PI * 2);
-                ctx.fill();
-                this.drawHealthBar(ctx, unit.x - 16, unit.y - data.radius - 12, 32, 5, unit.hp, unit.maxHp);
+                this.drawText(ctx, d.emoji, u.x, u.y + 4, '#fff', 10, true);
+                this.drawHealthBar(ctx, u.x - 16, u.y - d.radius - 12, 32, 5, u.hp, u.maxHp);
             }
         }
 
@@ -593,15 +579,14 @@
         }
 
         drawTopOverlay(ctx) {
-            const playerKing = this.towers.find((t) => t.team === TEAM_PLAYER && t.kind === 'king');
-            const botKing = this.towers.find((t) => t.team === TEAM_BOT && t.kind === 'king');
-            if (!playerKing || !botKing) return;
-
+            const pk = this.towers.find((t) => t.team === TEAM_PLAYER && t.kind === 'king');
+            const bk = this.towers.find((t) => t.team === TEAM_BOT && t.kind === 'king');
+            if (!pk || !bk) return;
             ctx.fillStyle = 'rgba(16, 28, 42, 0.56)';
             ctx.fillRect(20, 8, CANVAS_WIDTH - 40, 22);
-            this.drawText(ctx, `Bot King HP ${Math.ceil(botKing.hp)}`, 80, 23, '#dfeeff', 12);
-            this.drawText(ctx, `Your King HP ${Math.ceil(playerKing.hp)}`, CANVAS_WIDTH - 122, 23, '#dfeeff', 12);
-            this.drawText(ctx, `Selected: ${UNITS[this.selectedCard].name}`, CANVAS_WIDTH / 2, 23, '#fff', 12, true);
+            this.drawText(ctx, `Bot 👑 ${Math.ceil(bk.hp)}`, 70, 23, '#dfeeff', 12);
+            this.drawText(ctx, `You 👑 ${Math.ceil(pk.hp)}`, CANVAS_WIDTH - 136, 23, '#dfeeff', 12);
+            this.drawText(ctx, `Selected: ${UNITS[this.selectedCard].emoji}`, CANVAS_WIDTH / 2, 23, '#fff', 12, true);
         }
 
         drawEndOverlay(ctx) {
@@ -613,23 +598,21 @@
             this.drawText(ctx, 'Tap Restart or Next Arena below', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 38, '#d2e0f5', 14, true);
         }
 
-        drawHealthBar(ctx, x, y, width, height, hp, maxHp) {
+        drawHealthBar(ctx, x, y, w, h, hp, maxHp) {
             const ratio = clamp(hp / maxHp, 0, 1);
             ctx.fillStyle = 'rgba(13, 23, 35, 0.8)';
-            ctx.fillRect(x, y, width, height);
+            ctx.fillRect(x, y, w, h);
             ctx.fillStyle = '#48cf92';
-            ctx.fillRect(x, y, width * ratio, height);
+            ctx.fillRect(x, y, w * ratio, h);
         }
 
         drawText(ctx, text, x, y, color = '#fff', size = 14, centered = false) {
             ctx.fillStyle = color;
             ctx.font = `${size}px Inter, Arial, sans-serif`;
-            if (!centered) {
-                ctx.fillText(text, x, y);
-                return;
-            }
-            const m = ctx.measureText(text);
-            ctx.fillText(text, x - m.width / 2, y);
+            if (centered) {
+                const m = ctx.measureText(text);
+                ctx.fillText(text, x - m.width / 2, y);
+            } else ctx.fillText(text, x, y);
         }
 
         syncHud(force = false) {
@@ -637,23 +620,22 @@
             if (!force && version === this.stateVersion) return;
             this.stateVersion = version;
 
-            const timer = document.getElementById('clash-timer');
-            const score = document.getElementById('clash-score');
-            const pElixir = document.getElementById('clash-player-elixir');
-            const bElixir = document.getElementById('clash-bot-elixir');
-            const status = document.getElementById('clash-status');
-            const substatus = document.getElementById('clash-substatus');
-            const message = document.getElementById('clash-message');
-
             const mins = Math.floor(this.timeLeft / 60);
             const secs = Math.floor(this.timeLeft % 60);
+            const timer = document.getElementById('clash-timer');
+            const score = document.getElementById('clash-score');
+            const pE = document.getElementById('clash-player-elixir');
+            const bE = document.getElementById('clash-bot-elixir');
+            const status = document.getElementById('clash-status');
+            const sub = document.getElementById('clash-substatus');
+            const msg = document.getElementById('clash-message');
             if (timer) timer.textContent = `${mins}:${String(secs).padStart(2, '0')}`;
             if (score) score.textContent = `👑 ${this.playerCrown} : ${this.botCrown} 👑`;
-            if (pElixir) pElixir.textContent = `Elixir ${this.playerElixir.toFixed(1)}`;
-            if (bElixir) bElixir.textContent = `Elixir ${this.botElixir.toFixed(1)}`;
+            if (pE) pE.textContent = `Elixir ${this.playerElixir.toFixed(1)}`;
+            if (bE) bE.textContent = `Elixir ${this.botElixir.toFixed(1)}`;
             if (status) status.textContent = `Arena ${this.levelIndex + 1} · ${this.currentLevel().name}`;
-            if (substatus) substatus.textContent = this.gameOver ? this.statusMessage : 'Tap a troop card, then tap any spot below the river.';
-            if (message) message.textContent = this.statusMessage;
+            if (sub) sub.textContent = this.gameOver ? this.statusMessage : 'Tap a troop emoji, then tap below the river.';
+            if (msg) msg.textContent = this.statusMessage;
         }
     }
 
@@ -667,14 +649,11 @@
 
     function canvasPoint(event, canvas) {
         const rect = canvas.getBoundingClientRect();
-        const scaleX = canvas.width / rect.width;
-        const scaleY = canvas.height / rect.height;
-        const clientX = event.touches ? event.touches[0].clientX : event.clientX;
-        const clientY = event.touches ? event.touches[0].clientY : event.clientY;
-        return {
-            x: (clientX - rect.left) * scaleX,
-            y: (clientY - rect.top) * scaleY
-        };
+        const sx = canvas.width / rect.width;
+        const sy = canvas.height / rect.height;
+        const cx = event.touches ? event.touches[0].clientX : event.clientX;
+        const cy = event.touches ? event.touches[0].clientY : event.clientY;
+        return { x: (cx - rect.left) * sx, y: (cy - rect.top) * sy };
     }
 
     function bindControls() {
@@ -683,7 +662,7 @@
                 if (!game) return;
                 game.selectedCard = button.dataset.clashCard;
                 setActiveCard(game.selectedCard);
-                game.statusMessage = `${UNITS[game.selectedCard].name} selected. Tap your side to deploy.`;
+                game.statusMessage = `${UNITS[game.selectedCard].emoji} selected.`;
                 game.syncHud(true);
             });
         });
@@ -700,33 +679,27 @@
             canvas.addEventListener('touchstart', handler, { passive: false });
         }
 
-        const restartBtn = document.getElementById('clash-restart');
-        if (restartBtn) {
-            restartBtn.addEventListener('click', () => {
-                if (!game) return;
-                game.resetMatch();
-                game.start();
-            });
-        }
+        const restart = document.getElementById('clash-restart');
+        if (restart) restart.addEventListener('click', () => {
+            if (!game) return;
+            game.resetMatch();
+            game.start();
+        });
 
-        const nextBtn = document.getElementById('clash-next-level');
-        if (nextBtn) {
-            nextBtn.addEventListener('click', () => {
-                if (!game) return;
-                game.levelIndex = (game.levelIndex + 1) % LEVELS.length;
-                game.resetMatch();
-                game.start();
-            });
-        }
+        const next = document.getElementById('clash-next-level');
+        if (next) next.addEventListener('click', () => {
+            if (!game) return;
+            game.levelIndex = (game.levelIndex + 1) % LEVELS.length;
+            game.resetMatch();
+            game.start();
+        });
     }
 
     function initClash(forceReset = false) {
         if (!game) {
             game = new ClashBrowserGame();
             bindControls();
-        } else if (forceReset) {
-            game.resetMatch();
-        }
+        } else if (forceReset) game.resetMatch();
 
         game.start();
         game.syncHud(true);
