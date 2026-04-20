@@ -1499,3 +1499,38 @@ body {
 #clash-game {
     padding: 14px;
 }
+
+.toss-card {
+    background: linear-gradient(155deg, #ffffff 0%, #f2f7ff 100%);
+}
+
+.papertoss-panel {
+    background: linear-gradient(180deg, #f8fbff 0%, #eef3ff 100%);
+}
+
+.papertoss-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+#papertoss-stats {
+    font-weight: 700;
+    color: #2e4268;
+    font-size: 0.95rem;
+}
+
+#papertoss-canvas {
+    width: 100%;
+    max-width: 380px;
+    aspect-ratio: 380 / 560;
+    border-radius: 18px;
+    border: 2px solid rgba(92, 108, 255, 0.24);
+    background: #e7edff;
+    display: block;
+    margin: 0 auto;
+    box-shadow: 0 18px 30px rgba(47, 66, 112, 0.16);
+    touch-action: none;
+}

@@ -3,12 +3,13 @@
 let firebase = null;
 let currentUser = null;
 let authMode = 'signin';
-const games = ['wordle', 'spellingbee', 'sudoku', 'clash'];
+const games = ['wordle', 'spellingbee', 'sudoku', 'clash', 'papertoss'];
 const gameLabels = {
     wordle: 'Wordle',
     spellingbee: 'Spelling Bee',
     sudoku: 'Sudoku',
-    clash: 'Clash'
+    clash: 'Clash',
+    papertoss: 'Paper Toss'
 };
 let dailyScoresCache = {};
 let scoresMode = 'daily';
@@ -165,6 +166,9 @@ function showGame(gameName) {
             break;
         case 'clash':
             initClash();
+            break;
+        case 'papertoss':
+            initPaperToss();
             break;
     }
 }
