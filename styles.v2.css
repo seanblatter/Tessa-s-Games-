@@ -1508,24 +1508,51 @@ body {
     background: linear-gradient(180deg, #f8fbff 0%, #eef3ff 100%);
 }
 
-.papertoss-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 10px;
+
+.papertoss-bottom-bar {
+    margin-top: 10px;
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: #26385f;
+    color: #f1f5ff;
+    font-weight: 700;
+    font-size: 0.95rem;
+    letter-spacing: 0.01em;
+    text-align: center;
 }
 
-#papertoss-stats {
-    font-weight: 700;
+.papertoss-skins {
+    margin-top: 10px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.papertoss-skin {
+    border-radius: 10px;
+    border: 1px solid rgba(92, 108, 255, 0.3);
+    background: #fff;
     color: #2e4268;
-    font-size: 0.95rem;
+    font-weight: 600;
+    padding: 8px 10px;
+    font-size: 0.85rem;
+}
+
+.papertoss-skin.active {
+    background: #5c6cff;
+    color: #fff;
+    border-color: #5c6cff;
+}
+
+.papertoss-skin:disabled {
+    opacity: 0.5;
 }
 
 #papertoss-canvas {
     width: 100%;
-    max-width: 380px;
-    aspect-ratio: 380 / 560;
+    max-width: 420px;
+    aspect-ratio: 420 / 560;
     border-radius: 18px;
     border: 2px solid rgba(92, 108, 255, 0.24);
     background: #e7edff;

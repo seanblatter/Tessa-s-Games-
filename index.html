@@ -119,7 +119,7 @@
                 </button>
                 <button class="game-button toss-card" onclick="showGame('papertoss')">
                     <span class="game-icon">🗑️</span>
-                    <span class="game-name">Paper Toss: Jerk Boss</span>
+                    <span class="game-name">Paper Toss Office</span>
                     <span class="game-desc">Curve paper through the office fan and sink it in the bin</span>
                 </button>
             </div>
@@ -263,16 +263,15 @@
         <div id="papertoss-screen" class="screen">
             <div class="game-header">
                 <button class="back-button" onclick="showMenu()">← Back</button>
-                <h2>Paper Toss: Jerk Boss</h2>
-                <button class="new-game-button" onclick="initPaperToss(true)">New Round</button>
+                <h2>Paper Toss Office</h2>
+                <button class="new-game-button" id="papertoss-reset">Reset</button>
             </div>
             <div class="panel papertoss-panel">
-                <div class="papertoss-top">
-                    <div id="papertoss-stats">Score 0 · Shots 10 · Wind +0.0</div>
-                    <button class="secondary-button" id="papertoss-reset">Reset</button>
-                </div>
-                <canvas id="papertoss-canvas" width="380" height="560" aria-label="Paper Toss office arena"></canvas>
-                <p id="papertoss-message" class="message">Tap or click to aim at the bin. The boss keeps changing the fan speed.</p>
+                <canvas id="papertoss-canvas" width="420" height="560" aria-label="Paper Toss office arena"></canvas>
+                <p id="papertoss-message" class="message">Tap or swipe upward to throw. Adjust for the fan.</p>
+                <div id="papertoss-stats" class="papertoss-bottom-bar">Score 0 · Shots 12 · Wind +0.0</div>
+                <div id="papertoss-skins" class="papertoss-skins" aria-label="Paper ball skins"></div>
+                <button id="papertoss-play-again" class="primary-button" style="display:none; width:100%; margin-top:10px;">Play Again</button>
             </div>
         </div>
 
