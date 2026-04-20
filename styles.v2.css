@@ -1500,6 +1500,27 @@ body {
     padding: 14px;
 }
 
+
+.papertoss-header {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+}
+
+.papertoss-header .back-button {
+    justify-self: start;
+}
+
+.papertoss-header h2 {
+    justify-self: center;
+    text-align: center;
+}
+
+.papertoss-header .new-game-button {
+    justify-self: end;
+}
+
+
 .toss-card {
     background: linear-gradient(155deg, #ffffff 0%, #f2f7ff 100%);
 }

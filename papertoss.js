@@ -229,6 +229,17 @@
                     t: 0
                 });
             }
+            if (typeof window.addPaperTossPoints === 'function') {
+                window.addPaperTossPoints(1)
+                    .then(async () => {
+                        if (typeof window.getPaperTossProfile === 'function') {
+                            this.profile = await window.getPaperTossProfile();
+                            this.renderSkinButtons();
+                            this.updateHud();
+                        }
+                    })
+                    .catch(() => {});
+            }
             this.updateHud();
         }
 
@@ -339,7 +350,7 @@
             }
 
             const hitFloor = p.y + p.r >= HEIGHT - 4;
-            const outBounds = p.x < -30 || p.x > WIDTH + 30 || p.y < -30 || p.life > 5.3;
+            const outBounds = p.x < -30 || p.x > WIDTH + 30 || p.y < -260 || p.life > 6.2;
             if (hitFloor || outBounds) {
                 this.missThrow();
             }
@@ -434,28 +445,67 @@
             ctx.strokeStyle = '#ccd5ea';
             ctx.lineWidth = 1.5;
             ctx.beginPath();
-            ctx.roundRect(306, FLOOR_Y + 30, 70, 42, 8);
+            ctx.roundRect(300, FLOOR_Y + 26, 82, 52, 8);
             ctx.fill();
             ctx.stroke();
             ctx.fillStyle = '#526897';
-            ctx.font = '700 11px Inter, Arial';
-            ctx.fillText('MONTHLY REPORT', 312, FLOOR_Y + 46);
+            ctx.font = '700 9px Inter, Arial';
+            ctx.fillText('MONTHLY REPORT', 307, FLOOR_Y + 41);
             ctx.fillStyle = '#8aa0cc';
-            ctx.fillRect(312, FLOOR_Y + 52, 56, 3);
-            ctx.fillRect(312, FLOOR_Y + 58, 46, 3);
+            ctx.fillRect(307, FLOOR_Y + 46, 66, 3);
+            ctx.fillRect(307, FLOOR_Y + 52, 58, 3);
+            ctx.fillRect(307, FLOOR_Y + 58, 62, 3);
+
+            ctx.fillStyle = '#60708f';
+            ctx.fillRect(122, FLOOR_Y + 92, 46, 18);
+            ctx.fillStyle = '#44506a';
+            ctx.fillRect(138, FLOOR_Y + 108, 14, 30);
+            ctx.beginPath();
+            ctx.arc(145, FLOOR_Y + 144, 14, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#f5f7ff';
+            ctx.strokeStyle = '#b8c4e3';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.roundRect(144, 92, 132, 54, 8);
+            ctx.fill();
+            ctx.stroke();
+            ctx.fillStyle = '#7b90be';
+            ctx.fillRect(154, 104, 92, 3);
+            ctx.fillRect(154, 114, 72, 3);
+            ctx.fillRect(154, 124, 82, 3);
         }
 
         drawBin(ctx) {
             const { x, y, w, h } = this.bin;
-            ctx.fillStyle = 'rgba(16, 25, 41, 0.22)';
+            ctx.fillStyle = 'rgba(16, 25, 41, 0.25)';
             ctx.beginPath();
-            ctx.ellipse(x, y + h + 8, w * 0.45, 10, 0, 0, Math.PI * 2);
+            ctx.ellipse(x, y + h + 10, w * 0.46, 11, 0, 0, Math.PI * 2);
             ctx.fill();
-            ctx.fillStyle = '#8f9cb6';
+
+            ctx.fillStyle = '#8a99b4';
             ctx.beginPath();
-            ctx.roundRect(x - w / 2, y + 5, w, h, 11);
+            ctx.roundRect(x - w / 2, y + 6, w, h + 4, 10);
             ctx.fill();
-            ctx.fillStyle = '#e2e8f5';
+
+            ctx.strokeStyle = 'rgba(231,239,255,0.45)';
+            ctx.lineWidth = 1;
+            for (let i = -3; i <= 3; i += 1) {
+                const xx = x + i * 11;
+                ctx.beginPath();
+                ctx.moveTo(xx, y + 12);
+                ctx.lineTo(xx, y + h + 4);
+                ctx.stroke();
+            }
+            for (let yy = y + 16; yy <= y + h + 2; yy += 10) {
+                ctx.beginPath();
+                ctx.moveTo(x - w * 0.4, yy);
+                ctx.lineTo(x + w * 0.4, yy);
+                ctx.stroke();
+            }
+
+            ctx.fillStyle = '#e7edf8';
             ctx.beginPath();
             ctx.ellipse(x, y, w * 0.52, 10, 0, 0, Math.PI * 2);
             ctx.fill();

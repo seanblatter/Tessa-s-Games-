@@ -1016,24 +1016,37 @@ window.savePaperTossSkin = async (skinId) => {
     await firebase.setDoc(userRef, { paperTossSelectedSkin: skinId }, { merge: true });
 };
 
-window.recordPaperTossRound = async (roundScore) => {
+window.addPaperTossPoints = async (pointsToAdd = 0) => {
     if (!firebase || !currentUser) return;
-    const points = Math.max(0, Number(roundScore || 0));
     const profile = await window.getPaperTossProfile();
+    const points = Math.max(0, Number(pointsToAdd || 0));
     const totalPoints = profile.totalPoints + points;
-    const bestRound = Math.max(profile.bestRound || 0, points);
     const unlockedSkins = PAPER_TOSS_SKINS
         .filter((skin) => totalPoints >= skin.requiredPoints)
         .map((skin) => skin.id);
-
     const selectedSkin = unlockedSkins.includes(profile.selectedSkin) ? profile.selectedSkin : 'classic';
-    paperTossProfileCache = { totalPoints, unlockedSkins, selectedSkin, bestRound };
+    paperTossProfileCache = {
+        totalPoints,
+        unlockedSkins,
+        selectedSkin,
+        bestRound: profile.bestRound || 0
+    };
 
     const userRef = firebase.doc(firebase.db, 'users', currentUser.uid);
     await firebase.setDoc(userRef, {
         paperTossTotalPoints: totalPoints,
-        paperTossBestRound: bestRound,
         paperTossUnlockedSkins: unlockedSkins,
         paperTossSelectedSkin: selectedSkin
+    }, { merge: true });
+};
+
+window.recordPaperTossRound = async (roundScore) => {
+    if (!firebase || !currentUser) return;
+    const profile = await window.getPaperTossProfile();
+    const bestRound = Math.max(profile.bestRound || 0, Number(roundScore || 0));
+    paperTossProfileCache = { ...profile, bestRound };
+    const userRef = firebase.doc(firebase.db, 'users', currentUser.uid);
+    await firebase.setDoc(userRef, {
+        paperTossBestRound: bestRound
     }, { merge: true });
 };
