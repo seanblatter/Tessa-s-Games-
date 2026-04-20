@@ -362,118 +362,151 @@
 
         drawOfficeBackground(ctx) {
             const wallGrad = ctx.createLinearGradient(0, 0, 0, FLOOR_Y);
-            wallGrad.addColorStop(0, '#f9fbff');
-            wallGrad.addColorStop(1, '#e8eefc');
+            wallGrad.addColorStop(0, '#fbfcff');
+            wallGrad.addColorStop(1, '#e8eefb');
             ctx.fillStyle = wallGrad;
             ctx.fillRect(0, 0, WIDTH, FLOOR_Y);
 
-            ctx.fillStyle = '#dde4f5';
-            for (let y = 24; y < FLOOR_Y - 10; y += 34) ctx.fillRect(0, y, WIDTH, 1);
+            // subtle wall pattern
+            ctx.fillStyle = 'rgba(143, 161, 196, 0.16)';
+            for (let y = 26; y < FLOOR_Y - 8; y += 36) ctx.fillRect(0, y, WIDTH, 1);
 
-            ctx.fillStyle = '#c9d8ef';
-            ctx.fillRect(20, 18, 126, 92);
-            ctx.fillStyle = '#a8c1e2';
-            ctx.fillRect(26, 24, 114, 80);
-            ctx.strokeStyle = '#8ea9cf';
+            // window + city skyline
+            ctx.fillStyle = '#c9dbf6';
+            ctx.fillRect(18, 16, 132, 96);
+            ctx.fillStyle = '#a8c2e7';
+            ctx.fillRect(24, 22, 120, 84);
+            ctx.fillStyle = 'rgba(87, 118, 169, 0.35)';
+            ctx.fillRect(34, 78, 14, 28);
+            ctx.fillRect(52, 70, 18, 36);
+            ctx.fillRect(76, 64, 16, 42);
+            ctx.fillRect(96, 74, 22, 32);
+            ctx.strokeStyle = '#8ea8cf';
             ctx.lineWidth = 2;
-            ctx.strokeRect(20, 18, 126, 92);
-            for (let y = 32; y < 98; y += 11) {
-                ctx.fillStyle = 'rgba(255,255,255,0.22)';
-                ctx.fillRect(30, y, 106, 2);
+            ctx.strokeRect(18, 16, 132, 96);
+            for (let y = 30; y < 98; y += 11) {
+                ctx.fillStyle = 'rgba(255,255,255,0.25)';
+                ctx.fillRect(28, y, 112, 2);
             }
 
-            ctx.fillStyle = '#c5d1e8';
+            // framed pictures
+            ctx.fillStyle = '#ffffff';
+            ctx.strokeStyle = '#c3d0e8';
+            ctx.lineWidth = 2;
             ctx.beginPath();
-            ctx.roundRect(WIDTH - 88, 20, 62, 108, 8);
+            ctx.roundRect(170, 18, 58, 40, 6);
             ctx.fill();
-            ctx.fillStyle = '#eef3fc';
-            ctx.fillRect(WIDTH - 80, 28, 46, 84);
-            ctx.fillStyle = '#8499bc';
-            ctx.fillRect(WIDTH - 72, 38, 30, 5);
-            ctx.fillRect(WIDTH - 72, 56, 30, 5);
-            ctx.fillRect(WIDTH - 72, 74, 30, 5);
+            ctx.stroke();
+            ctx.fillStyle = '#9bb2d8';
+            ctx.fillRect(178, 32, 42, 3);
+            ctx.fillRect(178, 40, 30, 3);
 
-            ctx.fillStyle = '#7285a9';
+            ctx.fillStyle = '#ffffff';
             ctx.beginPath();
-            ctx.arc(WIDTH * 0.5, 46, 17, 0, Math.PI * 2);
+            ctx.roundRect(238, 18, 58, 40, 6);
             ctx.fill();
-            ctx.fillStyle = '#f2f6ff';
+            ctx.stroke();
+            ctx.fillStyle = '#9bb2d8';
+            ctx.fillRect(246, 32, 42, 3);
+            ctx.fillRect(246, 40, 30, 3);
+
+            // filing cabinet
+            ctx.fillStyle = '#c7d2e8';
             ctx.beginPath();
-            ctx.arc(WIDTH * 0.5, 46, 13, 0, Math.PI * 2);
+            ctx.roundRect(WIDTH - 86, 20, 60, 110, 8);
             ctx.fill();
-            ctx.strokeStyle = '#7285a9';
+            ctx.fillStyle = '#eff3fc';
+            ctx.fillRect(WIDTH - 78, 28, 44, 86);
+            ctx.fillStyle = '#8398bc';
+            ctx.fillRect(WIDTH - 70, 38, 28, 5);
+            ctx.fillRect(WIDTH - 70, 56, 28, 5);
+            ctx.fillRect(WIDTH - 70, 74, 28, 5);
+
+            // clock
+            ctx.fillStyle = '#7084a8';
             ctx.beginPath();
-            ctx.moveTo(WIDTH * 0.5, 46);
-            ctx.lineTo(WIDTH * 0.5, 38);
-            ctx.moveTo(WIDTH * 0.5, 46);
-            ctx.lineTo(WIDTH * 0.5 + 6, 48);
+            ctx.arc(WIDTH * 0.5, 50, 18, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#f5f8ff';
+            ctx.beginPath();
+            ctx.arc(WIDTH * 0.5, 50, 14, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#7084a8';
+            ctx.beginPath();
+            ctx.moveTo(WIDTH * 0.5, 50);
+            ctx.lineTo(WIDTH * 0.5, 42);
+            ctx.moveTo(WIDTH * 0.5, 50);
+            ctx.lineTo(WIDTH * 0.5 + 6, 53);
             ctx.stroke();
 
             const floorGrad = ctx.createLinearGradient(0, FLOOR_Y, 0, HEIGHT);
-            floorGrad.addColorStop(0, '#d1b18f');
-            floorGrad.addColorStop(1, '#b38865');
+            floorGrad.addColorStop(0, '#d3b392');
+            floorGrad.addColorStop(1, '#b68b68');
             ctx.fillStyle = floorGrad;
             ctx.fillRect(0, FLOOR_Y, WIDTH, HEIGHT - FLOOR_Y);
 
-            ctx.fillStyle = '#9a7559';
+            // rug
+            ctx.fillStyle = 'rgba(97, 126, 176, 0.22)';
+            ctx.beginPath();
+            ctx.ellipse(WIDTH * 0.52, FLOOR_Y + 90, 128, 36, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // desk
+            ctx.fillStyle = '#9b775b';
             ctx.beginPath();
             ctx.roundRect(34, FLOOR_Y + 52, WIDTH - 68, 86, 16);
             ctx.fill();
-            ctx.fillStyle = '#7c5b43';
+            ctx.fillStyle = '#7e5d45';
             ctx.fillRect(48, FLOOR_Y + 62, WIDTH - 96, 12);
 
-            ctx.fillStyle = '#dce2ef';
+            // monitor + keyboard
+            ctx.fillStyle = '#dfe5f1';
             ctx.beginPath();
-            ctx.roundRect(154, FLOOR_Y + 20, 94, 54, 8);
+            ctx.roundRect(154, FLOOR_Y + 18, 94, 56, 8);
             ctx.fill();
-            ctx.fillStyle = '#30384a';
-            ctx.fillRect(160, FLOOR_Y + 27, 82, 37);
-            ctx.fillStyle = '#9fb3d6';
-            ctx.fillRect(195, FLOOR_Y + 74, 12, 5);
-            ctx.fillStyle = '#7889aa';
-            ctx.fillRect(170, FLOOR_Y + 84, 62, 7);
+            ctx.fillStyle = '#2f394b';
+            ctx.fillRect(160, FLOOR_Y + 25, 82, 38);
+            ctx.fillStyle = '#90a7d1';
+            ctx.fillRect(194, FLOOR_Y + 74, 14, 5);
+            ctx.fillStyle = '#7688aa';
+            ctx.fillRect(168, FLOOR_Y + 84, 66, 7);
 
-            ctx.fillStyle = '#7cad82';
+            // desk lamp
+            ctx.strokeStyle = '#4d5f83';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(268, FLOOR_Y + 76);
+            ctx.lineTo(282, FLOOR_Y + 50);
+            ctx.lineTo(296, FLOOR_Y + 64);
+            ctx.stroke();
+            ctx.fillStyle = '#5f759e';
+            ctx.beginPath();
+            ctx.arc(268, FLOOR_Y + 78, 6, 0, Math.PI * 2);
+            ctx.fill();
+
+            // plant
+            ctx.fillStyle = '#7eaf84';
             ctx.beginPath();
             ctx.ellipse(64, FLOOR_Y + 42, 16, 12, 0, 0, Math.PI * 2);
             ctx.fill();
-            ctx.fillStyle = '#667d68';
+            ctx.fillStyle = '#677f69';
             ctx.fillRect(57, FLOOR_Y + 46, 14, 10);
 
+            // report card
             ctx.fillStyle = '#ffffff';
-            ctx.strokeStyle = '#c8d3e9';
+            ctx.strokeStyle = '#c6d2e8';
             ctx.lineWidth = 1.5;
             ctx.beginPath();
-            ctx.roundRect(300, FLOOR_Y + 26, 84, 50, 8);
+            ctx.roundRect(300, FLOOR_Y + 24, 84, 52, 8);
             ctx.fill();
             ctx.stroke();
             ctx.fillStyle = '#4e678f';
             ctx.font = '700 9px Inter, Arial';
-            ctx.fillText('MONTHLY REPORT', 307, FLOOR_Y + 40);
-            ctx.fillStyle = '#8ea3c9';
-            ctx.fillRect(307, FLOOR_Y + 46, 67, 3);
-            ctx.fillRect(307, FLOOR_Y + 52, 58, 3);
-            ctx.fillRect(307, FLOOR_Y + 58, 62, 3);
-
-            ctx.fillStyle = '#5d6f90';
-            ctx.fillRect(118, FLOOR_Y + 94, 50, 18);
-            ctx.fillStyle = '#43526d';
-            ctx.fillRect(136, FLOOR_Y + 112, 14, 26);
-            ctx.beginPath();
-            ctx.arc(143, FLOOR_Y + 142, 14, 0, Math.PI * 2);
-            ctx.fill();
-
-            ctx.fillStyle = '#f7f9ff';
-            ctx.strokeStyle = '#b9c6e2';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.roundRect(146, 92, 130, 54, 8);
-            ctx.fill();
-            ctx.stroke();
-            ctx.fillStyle = '#7f96c2';
-            ctx.fillRect(156, 104, 92, 3);
-            ctx.fillRect(156, 114, 72, 3);
-            ctx.fillRect(156, 124, 82, 3);
+            ctx.fillText('MONTHLY REPORT', 307, FLOOR_Y + 39);
+            ctx.fillStyle = '#8fa3c8';
+            ctx.fillRect(307, FLOOR_Y + 45, 67, 3);
+            ctx.fillRect(307, FLOOR_Y + 51, 58, 3);
+            ctx.fillRect(307, FLOOR_Y + 57, 62, 3);
         }
 
         drawBin(ctx) {

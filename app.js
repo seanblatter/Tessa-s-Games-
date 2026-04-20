@@ -1021,6 +1021,14 @@ function saveGuestPaperTossProfile(profile) {
     }
 }
 
+
+function getCachedPaperTossProfile() {
+    if (paperTossProfileCache) return paperTossProfileCache;
+    const guest = loadGuestPaperTossProfile();
+    paperTossProfileCache = guest;
+    return guest;
+}
+
 window.getPaperTossProfile = async () => {
     if (!firebase || !currentUser) {
         paperTossProfileCache = loadGuestPaperTossProfile();
@@ -1028,74 +1036,85 @@ window.getPaperTossProfile = async () => {
     }
     if (paperTossProfileCache) return paperTossProfileCache;
 
-    const userRef = firebase.doc(firebase.db, 'users', currentUser.uid);
-    const userSnap = await firebase.getDoc(userRef);
-    const data = userSnap.exists() ? userSnap.data() : {};
-
-    paperTossProfileCache = normalizePaperTossProfile({
-        totalPoints: data.paperTossTotalPoints || 0,
-        unlockedSkins: data.paperTossUnlockedSkins || ['classic'],
-        selectedSkin: data.paperTossSelectedSkin || 'classic',
-        bestRound: data.paperTossBestRound || 0
-    });
-    return paperTossProfileCache;
+    try {
+        const userRef = firebase.doc(firebase.db, 'users', currentUser.uid);
+        const userSnap = await firebase.getDoc(userRef);
+        const data = userSnap.exists() ? userSnap.data() : {};
+        paperTossProfileCache = normalizePaperTossProfile({
+            totalPoints: data.paperTossTotalPoints || 0,
+            unlockedSkins: data.paperTossUnlockedSkins || ['classic'],
+            selectedSkin: data.paperTossSelectedSkin || 'classic',
+            bestRound: data.paperTossBestRound || 0
+        });
+        saveGuestPaperTossProfile(paperTossProfileCache);
+        return paperTossProfileCache;
+    } catch (error) {
+        paperTossProfileCache = loadGuestPaperTossProfile();
+        return paperTossProfileCache;
+    }
 };
 
 window.savePaperTossSkin = async (skinId) => {
-    const profile = await window.getPaperTossProfile();
+    const profile = getCachedPaperTossProfile();
     if (!profile.unlockedSkins.includes(skinId)) return profile;
     const next = normalizePaperTossProfile({ ...profile, selectedSkin: skinId });
     paperTossProfileCache = next;
+    saveGuestPaperTossProfile(next);
 
-    if (!firebase || !currentUser) {
-        saveGuestPaperTossProfile(next);
-        return next;
+    if (firebase && currentUser) {
+        try {
+            const userRef = firebase.doc(firebase.db, 'users', currentUser.uid);
+            await firebase.setDoc(userRef, { paperTossSelectedSkin: skinId }, { merge: true });
+        } catch (error) {
+            // Keep local progress even if network write fails.
+        }
     }
-
-    const userRef = firebase.doc(firebase.db, 'users', currentUser.uid);
-    await firebase.setDoc(userRef, { paperTossSelectedSkin: skinId }, { merge: true });
     return next;
 };
 
 window.addPaperTossPoints = async (pointsToAdd = 0) => {
-    const profile = await window.getPaperTossProfile();
+    const profile = getCachedPaperTossProfile();
     const points = Math.max(0, Number(pointsToAdd || 0));
     const next = normalizePaperTossProfile({
         ...profile,
         totalPoints: profile.totalPoints + points
     });
     paperTossProfileCache = next;
+    saveGuestPaperTossProfile(next);
 
-    if (!firebase || !currentUser) {
-        saveGuestPaperTossProfile(next);
-        return next;
+    if (firebase && currentUser) {
+        try {
+            const userRef = firebase.doc(firebase.db, 'users', currentUser.uid);
+            await firebase.setDoc(userRef, {
+                paperTossTotalPoints: next.totalPoints,
+                paperTossUnlockedSkins: next.unlockedSkins,
+                paperTossSelectedSkin: next.selectedSkin
+            }, { merge: true });
+        } catch (error) {
+            // Keep local progress even if network write fails.
+        }
     }
-
-    const userRef = firebase.doc(firebase.db, 'users', currentUser.uid);
-    await firebase.setDoc(userRef, {
-        paperTossTotalPoints: next.totalPoints,
-        paperTossUnlockedSkins: next.unlockedSkins,
-        paperTossSelectedSkin: next.selectedSkin
-    }, { merge: true });
     return next;
 };
 
 window.recordPaperTossRound = async (roundScore) => {
-    const profile = await window.getPaperTossProfile();
+    const profile = getCachedPaperTossProfile();
     const next = normalizePaperTossProfile({
         ...profile,
         bestRound: Math.max(profile.bestRound || 0, Number(roundScore || 0))
     });
     paperTossProfileCache = next;
+    saveGuestPaperTossProfile(next);
 
-    if (!firebase || !currentUser) {
-        saveGuestPaperTossProfile(next);
-        return next;
+    if (firebase && currentUser) {
+        try {
+            const userRef = firebase.doc(firebase.db, 'users', currentUser.uid);
+            await firebase.setDoc(userRef, {
+                paperTossBestRound: next.bestRound
+            }, { merge: true });
+        } catch (error) {
+            // Keep local progress even if network write fails.
+        }
     }
-
-    const userRef = firebase.doc(firebase.db, 'users', currentUser.uid);
-    await firebase.setDoc(userRef, {
-        paperTossBestRound: next.bestRound
-    }, { merge: true });
     return next;
 };
