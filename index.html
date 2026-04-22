@@ -88,6 +88,7 @@
                         <button class="dropdown-item" onclick="showProfile()">Profile</button>
                         <button class="dropdown-item" onclick="showTopScores()">Top Scores</button>
                         <button class="dropdown-item" onclick="showConnect()">Connect</button>
+                        <button class="dropdown-item" onclick="showMessages()">Messages</button>
                         <button class="dropdown-item" onclick="signOutUser()">Logout</button>
                     </div>
                 </div>
@@ -192,6 +193,56 @@
             <div class="panel">
                 <h3>Friend requests</h3>
                 <div id="friend-requests" class="request-list"></div>
+            </div>
+        </div>
+
+        <!-- Messages Screen -->
+        <div id="messages-screen" class="screen">
+            <div class="game-header">
+                <button class="back-button" onclick="showMenu()">← Back</button>
+                <h2>Messages</h2>
+                <div></div>
+            </div>
+            <div class="panel">
+                <div class="score-game-tabs" role="tablist" aria-label="Select message surface">
+                    <button class="score-game-card active" id="chat-tab-btn" type="button" onclick="switchMessageTab('chat')">Chat</button>
+                    <button class="score-game-card" id="mail-tab-btn" type="button" onclick="switchMessageTab('mail')">Mail</button>
+                </div>
+
+                <section id="chat-panel">
+                    <div id="chat-thread" class="mail-thread"></div>
+                    <form id="chat-form" class="mail-inline-composer">
+                        <label for="chatInput">Chat message</label>
+                        <textarea id="chatInput" rows="4" maxlength="800" required placeholder="Type a message..."></textarea>
+                        <div class="mail-inline-actions">
+                            <button type="submit" class="btn-primary">Send</button>
+                        </div>
+                    </form>
+                </section>
+
+                <section id="mail-panel" hidden>
+                    <div class="mail-toolbar">
+                        <button type="button" class="btn-primary" id="mailComposeOpenBtn" onclick="openMailComposer()">Compose</button>
+                    </div>
+                    <div id="mail-thread" class="mail-thread"></div>
+                    <section class="mail-inline-composer mail-compose-surface" id="mailComposePanel" hidden>
+                        <h3 id="mailComposeTitle">Compose email</h3>
+                        <form id="mailComposeForm">
+                            <label for="mailToInput">To</label>
+                            <input id="mailToInput" type="email" autocomplete="email" required placeholder="name@company.com">
+                            <label for="mailSubjectInput">Subject</label>
+                            <input id="mailSubjectInput" type="text" maxlength="240" required placeholder="Campaign recap">
+                            <label for="mailBodyInput">Message</label>
+                            <textarea id="mailBodyInput" rows="12" maxlength="10000" required placeholder="Type your message..."></textarea>
+                            <p class="mail-empty" id="mailComposeStatus" hidden></p>
+                            <div class="mail-inline-actions">
+                                <button type="button" class="btn-secondary" id="mailDraftBtn" onclick="saveMailDraft()" title="Save draft" aria-label="Save draft">💾</button>
+                                <button type="button" class="btn-secondary" id="mailComposeCancelBtn" onclick="closeMailComposer()">Cancel</button>
+                                <button type="submit" class="btn-primary" id="mailComposeSendBtn">Send</button>
+                            </div>
+                        </form>
+                    </section>
+                </section>
             </div>
         </div>
 
