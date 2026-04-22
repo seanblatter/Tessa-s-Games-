@@ -16,6 +16,7 @@ let scoresMode = 'daily';
 let pendingInviteUid = null;
 let selectedScoresGame = 'wordle';
 let paperTossProfileCache = null;
+let activeMessageTab = 'chat';
 
 function getInviteParam() {
     const params = new URLSearchParams(window.location.search);
@@ -41,6 +42,14 @@ document.addEventListener('DOMContentLoaded', () => {
             setScoresMode(button.dataset.mode || 'daily');
         });
     });
+    const chatForm = document.getElementById('chat-form');
+    if (chatForm) {
+        chatForm.addEventListener('submit', handleChatSubmit);
+    }
+    const mailComposeForm = document.getElementById('mailComposeForm');
+    if (mailComposeForm) {
+        mailComposeForm.addEventListener('submit', handleMailSubmit);
+    }
 });
 
 let firebaseInitialized = false;
@@ -147,6 +156,25 @@ function showConnect() {
     renderInviteLink();
     document.getElementById('connect-message').textContent = '';
     renderFriendRequests();
+}
+
+async function showMessages() {
+    hideAllScreens();
+    document.getElementById('messages-screen').classList.add('active');
+    switchMessageTab(activeMessageTab);
+    await Promise.all([loadChatMessages(), loadMailMessages()]);
+}
+
+function switchMessageTab(tab) {
+    activeMessageTab = tab === 'mail' ? 'mail' : 'chat';
+    const chatPanel = document.getElementById('chat-panel');
+    const mailPanel = document.getElementById('mail-panel');
+    const chatTab = document.getElementById('chat-tab-btn');
+    const mailTab = document.getElementById('mail-tab-btn');
+    chatPanel.hidden = activeMessageTab !== 'chat';
+    mailPanel.hidden = activeMessageTab !== 'mail';
+    chatTab.classList.toggle('active', activeMessageTab === 'chat');
+    mailTab.classList.toggle('active', activeMessageTab === 'mail');
 }
 
 function showGame(gameName) {
@@ -939,6 +967,200 @@ function updateDailyGameLockUI() {
     });
 }
 
+function escapeHtml(text = '') {
+    return text
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+}
+
+function linkifyYouTubeHandles(text = '') {
+    const safe = escapeHtml(text);
+    return safe.replace(/(^|\s)@([A-Za-z0-9._-]{3,30})/g, (match, prefix, handle) => {
+        const url = `https://www.youtube.com/@${handle}`;
+        return `${prefix}<a href="${url}" target="_blank" rel="noopener noreferrer">@${handle}</a>`;
+    });
+}
+
+async function handleChatSubmit(event) {
+    event.preventDefault();
+    if (!firebase || !currentUser) return;
+    const input = document.getElementById('chatInput');
+    const text = input.value.trim();
+    if (!text) return;
+    await firebase.setDoc(firebase.doc(firebase.collection(firebase.db, 'chatMessages')), {
+        uid: currentUser.uid,
+        displayName: currentUser.displayName || 'Player',
+        body: text,
+        createdAt: firebase.serverTimestamp()
+    });
+    input.value = '';
+    await loadChatMessages();
+}
+
+async function loadChatMessages() {
+    if (!firebase || !currentUser) return;
+    const thread = document.getElementById('chat-thread');
+    thread.innerHTML = '<p class="mail-empty">Loading chat…</p>';
+    try {
+        let snapshot;
+        try {
+            snapshot = await firebase.getDocs(firebase.query(
+                firebase.collection(firebase.db, 'chatMessages'),
+                firebase.orderBy('createdAt', 'desc'),
+                firebase.limit(40)
+            ));
+        } catch (error) {
+            snapshot = await firebase.getDocs(firebase.query(
+                firebase.collection(firebase.db, 'chatMessages'),
+                firebase.limit(40)
+            ));
+        }
+        if (snapshot.empty) {
+            thread.innerHTML = '<p class="mail-empty">No chat messages yet.</p>';
+            return;
+        }
+        const entries = snapshot.docs.map((docSnap) => docSnap.data()).reverse();
+        thread.innerHTML = entries.map((entry) => `
+            <article class="mail-item">
+                <h4>${escapeHtml(entry.displayName || 'Player')}</h4>
+                <p>${linkifyYouTubeHandles(entry.body || '')}</p>
+            </article>
+        `).join('');
+    } catch (error) {
+        thread.innerHTML = `<p class="mail-empty">${escapeHtml(formatAuthError(error))}</p>`;
+    }
+}
+
+function draftStorageKey() {
+    return currentUser ? `mail_draft_${currentUser.uid}` : 'mail_draft_guest';
+}
+
+function loadMailDraft() {
+    try {
+        const raw = localStorage.getItem(draftStorageKey());
+        if (!raw) return null;
+        return JSON.parse(raw);
+    } catch (error) {
+        return null;
+    }
+}
+
+function populateComposeFromDraft() {
+    const draft = loadMailDraft();
+    if (!draft) return;
+    const toInput = document.getElementById('mailToInput');
+    const subjectInput = document.getElementById('mailSubjectInput');
+    const bodyInput = document.getElementById('mailBodyInput');
+    toInput.value = draft.to || '';
+    subjectInput.value = draft.subject || '';
+    bodyInput.value = draft.body || '';
+}
+
+function setComposeStatus(message, isError = false) {
+    const status = document.getElementById('mailComposeStatus');
+    status.hidden = !message;
+    status.textContent = message || '';
+    status.classList.toggle('error', Boolean(message && isError));
+}
+
+function openMailComposer() {
+    const panel = document.getElementById('mailComposePanel');
+    panel.hidden = false;
+    populateComposeFromDraft();
+    setComposeStatus('');
+}
+
+function closeMailComposer() {
+    const panel = document.getElementById('mailComposePanel');
+    panel.hidden = true;
+    setComposeStatus('');
+}
+
+function saveMailDraft() {
+    const draft = {
+        to: document.getElementById('mailToInput').value.trim(),
+        subject: document.getElementById('mailSubjectInput').value.trim(),
+        body: document.getElementById('mailBodyInput').value.trim()
+    };
+    localStorage.setItem(draftStorageKey(), JSON.stringify(draft));
+    setComposeStatus('Draft saved.');
+}
+
+async function handleMailSubmit(event) {
+    event.preventDefault();
+    if (!firebase || !currentUser) return;
+    const toInput = document.getElementById('mailToInput');
+    const subjectInput = document.getElementById('mailSubjectInput');
+    const bodyInput = document.getElementById('mailBodyInput');
+    const toEmail = toInput.value.trim();
+    const subject = subjectInput.value.trim();
+    const body = bodyInput.value.trim();
+    if (!toEmail || !subject || !body) return;
+
+    await firebase.setDoc(firebase.doc(firebase.collection(firebase.db, 'mailMessages')), {
+        fromUid: currentUser.uid,
+        fromDisplayName: currentUser.displayName || 'Player',
+        fromEmailLower: (currentUser.email || '').toLowerCase(),
+        toEmailLower: toEmail.toLowerCase(),
+        toEmail,
+        subject,
+        body,
+        createdAt: firebase.serverTimestamp()
+    });
+
+    toInput.value = '';
+    subjectInput.value = '';
+    bodyInput.value = '';
+    localStorage.removeItem(draftStorageKey());
+    closeMailComposer();
+    await loadMailMessages();
+}
+
+async function loadMailMessages() {
+    if (!firebase || !currentUser) return;
+    const thread = document.getElementById('mail-thread');
+    thread.innerHTML = '<p class="mail-empty">Loading mail…</p>';
+    const currentEmail = (currentUser.email || '').toLowerCase();
+    if (!currentEmail) {
+        thread.innerHTML = '<p class="mail-empty">Add an email to your profile to use mail.</p>';
+        return;
+    }
+    try {
+        let snapshot;
+        try {
+            snapshot = await firebase.getDocs(firebase.query(
+                firebase.collection(firebase.db, 'mailMessages'),
+                firebase.where('toEmailLower', '==', currentEmail),
+                firebase.orderBy('createdAt', 'desc'),
+                firebase.limit(40)
+            ));
+        } catch (error) {
+            snapshot = await firebase.getDocs(firebase.query(
+                firebase.collection(firebase.db, 'mailMessages'),
+                firebase.where('toEmailLower', '==', currentEmail),
+                firebase.limit(40)
+            ));
+        }
+        if (snapshot.empty) {
+            thread.innerHTML = '<p class="mail-empty">No received emails yet.</p>';
+            return;
+        }
+        const entries = snapshot.docs.map((docSnap) => docSnap.data());
+        thread.innerHTML = entries.map((entry) => `
+            <article class="mail-item">
+                <h4>${escapeHtml(entry.subject || '(No subject)')}</h4>
+                <p><strong>From:</strong> ${escapeHtml(entry.fromDisplayName || entry.fromEmailLower || 'Unknown')}</p>
+                <p>${linkifyYouTubeHandles(entry.body || '')}</p>
+            </article>
+        `).join('');
+    } catch (error) {
+        thread.innerHTML = `<p class="mail-empty">${escapeHtml(formatAuthError(error))}</p>`;
+    }
+}
+
 window.canPlayDailyGame = async (game) => {
     if (dailyScoresCache[game]) {
         showMessage(game, 'You already played today. Come back tomorrow!', 'info');
@@ -968,6 +1190,11 @@ window.lockDailyGameNow = (game, details = {}) => {
     dailyScoresCache[game] = buildDailyCacheEntry(game, details, getTodayKey());
     renderDailyScoresFromCache();
 };
+window.showMessages = showMessages;
+window.switchMessageTab = switchMessageTab;
+window.openMailComposer = openMailComposer;
+window.closeMailComposer = closeMailComposer;
+window.saveMailDraft = saveMailDraft;
 
 
 const PAPER_TOSS_SKINS = [
