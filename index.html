@@ -117,6 +117,11 @@
                     <span class="game-name">Clash</span>
                     <span class="game-desc">Launch the real-time Pygame bot arena</span>
                 </button>
+                <button class="game-button toss-card" onclick="showGame('papertoss')">
+                    <span class="game-icon">🗑️</span>
+                    <span class="game-name">Paper Toss Office</span>
+                    <span class="game-desc">Curve paper through the office fan and sink it in the bin</span>
+                </button>
             </div>
         </div>
 
@@ -254,6 +259,22 @@
             </div>
         </div>
 
+        <!-- Paper Toss Game -->
+        <div id="papertoss-screen" class="screen">
+            <div class="game-header papertoss-header">
+                <button class="back-button" onclick="showMenu()">← Back</button>
+                <h2>Paper Toss Office</h2>
+                <button class="new-game-button" id="papertoss-reset">Reset</button>
+            </div>
+            <div class="panel papertoss-panel">
+                <canvas id="papertoss-canvas" width="420" height="560" aria-label="Paper Toss office arena"></canvas>
+                <p id="papertoss-message" class="message">Tap or swipe upward to throw. Adjust for the fan.</p>
+                <div id="papertoss-stats" class="papertoss-bottom-bar">Score 0 · Shots 12 · Wind +0.0</div>
+                <div id="papertoss-skins" class="papertoss-skins" aria-label="Paper ball skins"></div>
+                <button id="papertoss-play-again" class="primary-button" style="display:none; width:100%; margin-top:10px;">Play Again</button>
+            </div>
+        </div>
+
         <!-- Sudoku Game -->
         <div id="sudoku-screen" class="screen">
             <div class="game-header">
@@ -326,6 +347,7 @@
     <script src="spellingbee.js"></script>
     <script src="sudoku.js"></script>
     <script src="clash.js"></script>
+    <script src="papertoss.js"></script>
     <script type="module">
       // Import the functions you need from the SDKs you need
       import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";

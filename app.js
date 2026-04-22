@@ -3,17 +3,19 @@
 let firebase = null;
 let currentUser = null;
 let authMode = 'signin';
-const games = ['wordle', 'spellingbee', 'sudoku', 'clash'];
+const games = ['wordle', 'spellingbee', 'sudoku', 'clash', 'papertoss'];
 const gameLabels = {
     wordle: 'Wordle',
     spellingbee: 'Spelling Bee',
     sudoku: 'Sudoku',
-    clash: 'Clash'
+    clash: 'Clash',
+    papertoss: 'Paper Toss'
 };
 let dailyScoresCache = {};
 let scoresMode = 'daily';
 let pendingInviteUid = null;
 let selectedScoresGame = 'wordle';
+let paperTossProfileCache = null;
 
 function getInviteParam() {
     const params = new URLSearchParams(window.location.search);
@@ -165,6 +167,9 @@ function showGame(gameName) {
             break;
         case 'clash':
             initClash();
+            break;
+        case 'papertoss':
+            initPaperToss();
             break;
     }
 }
@@ -962,4 +967,154 @@ window.getCurrentUser = () => currentUser;
 window.lockDailyGameNow = (game, details = {}) => {
     dailyScoresCache[game] = buildDailyCacheEntry(game, details, getTodayKey());
     renderDailyScoresFromCache();
+};
+
+
+const PAPER_TOSS_SKINS = [
+    { id: 'classic', label: 'Classic', requiredPoints: 0 },
+    { id: 'neon', label: 'Neon', requiredPoints: 25 },
+    { id: 'gold', label: 'Gold', requiredPoints: 75 },
+    { id: 'galaxy', label: 'Galaxy', requiredPoints: 150 }
+];
+
+const PAPER_TOSS_GUEST_KEY = 'tessa_papertoss_guest_profile';
+
+function defaultPaperTossProfile() {
+    return {
+        totalPoints: 0,
+        unlockedSkins: ['classic'],
+        selectedSkin: 'classic',
+        bestRound: 0
+    };
+}
+
+function normalizePaperTossProfile(raw = {}) {
+    const totalPoints = Number(raw.totalPoints || 0);
+    const unlockedByPoints = PAPER_TOSS_SKINS
+        .filter((skin) => totalPoints >= skin.requiredPoints)
+        .map((skin) => skin.id);
+    const unlockedSkins = Array.from(new Set(['classic', ...(raw.unlockedSkins || []), ...unlockedByPoints]));
+    const selectedSkin = unlockedSkins.includes(raw.selectedSkin) ? raw.selectedSkin : 'classic';
+    return {
+        totalPoints,
+        unlockedSkins,
+        selectedSkin,
+        bestRound: Number(raw.bestRound || 0)
+    };
+}
+
+function loadGuestPaperTossProfile() {
+    try {
+        const raw = localStorage.getItem(PAPER_TOSS_GUEST_KEY);
+        if (!raw) return defaultPaperTossProfile();
+        return normalizePaperTossProfile(JSON.parse(raw));
+    } catch (error) {
+        return defaultPaperTossProfile();
+    }
+}
+
+function saveGuestPaperTossProfile(profile) {
+    try {
+        localStorage.setItem(PAPER_TOSS_GUEST_KEY, JSON.stringify(profile));
+    } catch (error) {
+        // Ignore storage failures.
+    }
+}
+
+
+function getCachedPaperTossProfile() {
+    if (paperTossProfileCache) return paperTossProfileCache;
+    const guest = loadGuestPaperTossProfile();
+    paperTossProfileCache = guest;
+    return guest;
+}
+
+window.getPaperTossProfile = async () => {
+    if (!firebase || !currentUser) {
+        paperTossProfileCache = loadGuestPaperTossProfile();
+        return paperTossProfileCache;
+    }
+    if (paperTossProfileCache) return paperTossProfileCache;
+
+    try {
+        const userRef = firebase.doc(firebase.db, 'users', currentUser.uid);
+        const userSnap = await firebase.getDoc(userRef);
+        const data = userSnap.exists() ? userSnap.data() : {};
+        paperTossProfileCache = normalizePaperTossProfile({
+            totalPoints: data.paperTossTotalPoints || 0,
+            unlockedSkins: data.paperTossUnlockedSkins || ['classic'],
+            selectedSkin: data.paperTossSelectedSkin || 'classic',
+            bestRound: data.paperTossBestRound || 0
+        });
+        saveGuestPaperTossProfile(paperTossProfileCache);
+        return paperTossProfileCache;
+    } catch (error) {
+        paperTossProfileCache = loadGuestPaperTossProfile();
+        return paperTossProfileCache;
+    }
+};
+
+window.savePaperTossSkin = async (skinId) => {
+    const profile = getCachedPaperTossProfile();
+    if (!profile.unlockedSkins.includes(skinId)) return profile;
+    const next = normalizePaperTossProfile({ ...profile, selectedSkin: skinId });
+    paperTossProfileCache = next;
+    saveGuestPaperTossProfile(next);
+
+    if (firebase && currentUser) {
+        try {
+            const userRef = firebase.doc(firebase.db, 'users', currentUser.uid);
+            await firebase.setDoc(userRef, { paperTossSelectedSkin: skinId }, { merge: true });
+        } catch (error) {
+            // Keep local progress even if network write fails.
+        }
+    }
+    return next;
+};
+
+window.addPaperTossPoints = async (pointsToAdd = 0) => {
+    const profile = getCachedPaperTossProfile();
+    const points = Math.max(0, Number(pointsToAdd || 0));
+    const next = normalizePaperTossProfile({
+        ...profile,
+        totalPoints: profile.totalPoints + points
+    });
+    paperTossProfileCache = next;
+    saveGuestPaperTossProfile(next);
+
+    if (firebase && currentUser) {
+        try {
+            const userRef = firebase.doc(firebase.db, 'users', currentUser.uid);
+            await firebase.setDoc(userRef, {
+                paperTossTotalPoints: next.totalPoints,
+                paperTossUnlockedSkins: next.unlockedSkins,
+                paperTossSelectedSkin: next.selectedSkin
+            }, { merge: true });
+        } catch (error) {
+            // Keep local progress even if network write fails.
+        }
+    }
+    return next;
+};
+
+window.recordPaperTossRound = async (roundScore) => {
+    const profile = getCachedPaperTossProfile();
+    const next = normalizePaperTossProfile({
+        ...profile,
+        bestRound: Math.max(profile.bestRound || 0, Number(roundScore || 0))
+    });
+    paperTossProfileCache = next;
+    saveGuestPaperTossProfile(next);
+
+    if (firebase && currentUser) {
+        try {
+            const userRef = firebase.doc(firebase.db, 'users', currentUser.uid);
+            await firebase.setDoc(userRef, {
+                paperTossBestRound: next.bestRound
+            }, { merge: true });
+        } catch (error) {
+            // Keep local progress even if network write fails.
+        }
+    }
+    return next;
 };
