@@ -6,6 +6,7 @@
     <title>Tessa's Games</title>
     <link rel="icon" type="image/png" sizes="512x512" href="android-chrome-512x512.png">
     <link rel="stylesheet" href="styles.v2.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
 </head>
 <body>
     <div id="app">
@@ -122,6 +123,12 @@
                     <span class="game-name">Paper Toss Office</span>
                     <span class="game-desc">Curve paper through the office fan and sink it in the bin</span>
                 </button>
+                <button class="game-button catchme-card" onclick="showGame('catchme')">
+                    <span class="game-icon">🗺️</span>
+                    <span class="game-name">Catch Me</span>
+                    <span class="game-desc">Run across Chicago, claim territory, and steal tiles back</span>
+                </button>
+
             </div>
         </div>
 
@@ -275,6 +282,57 @@
             </div>
         </div>
 
+
+        <!-- Catch Me Game -->
+        <div id="catchme-screen" class="screen catchme-fullscreen">
+            <div id="catchme-map" aria-label="Chicago map for Catch Me"></div>
+            <div class="catchme-hud catchme-bottom-drawer collapsed" id="catchme-drawer" role="region" aria-label="Catch Me controls">
+                <button class="catchme-drawer-handle" id="catchme-drawer-toggle" type="button" aria-label="Expand controls">⌃</button>
+                <div class="catchme-hud-top">
+                    <button class="back-button" onclick="showMenu()">← Games</button>
+                    <h2>Catch Me · Chicago</h2>
+                    <button class="icon-pill" id="catchme-center-map" type="button" title="Center map">🧭</button>
+                </div>
+                <div class="catchme-controls catchme-secondary">
+                    <button id="catchme-free" class="secondary-button" type="button">🏃 Free</button>
+                    <button id="catchme-team" class="secondary-button" type="button">👥 Team</button>
+                    
+                    <label class="catchme-unit-label">Distance
+                        <select id="catchme-units">
+                            <option value="km">Kilometers (km)</option>
+                            <option value="mi">Miles (mi)</option>
+                        </select>
+                    </label>
+                    <label class="catchme-unit-label">Map Style
+                        <select id="catchme-style">
+                            <option value="streets">Streets</option>
+                            <option value="outdoors">Outdoors</option>
+                            <option value="light">Light</option>
+                            <option value="dark">Dark</option>
+                        </select>
+                    </label>
+                </div>
+                <div class="catchme-stats-card catchme-secondary">
+                    <div class="catchme-stat"><strong id="catchme-runtime">00:00</strong><span>Time</span></div>
+                    <div class="catchme-stat"><strong id="catchme-distance">0.00</strong><span>Distance</span></div>
+                    <div class="catchme-stat"><strong id="catchme-speed">0.0</strong><span>Avg speed</span></div>
+                </div>
+                <p id="catchme-message" class="message catchme-secondary">Move to start collecting GPS points and close your loop to claim area.</p>
+                <div id="catchme-progress" class="papertoss-bottom-bar catchme-secondary">Chicago progression</div>
+                <div id="catchme-points" class="catchme-points catchme-secondary"></div>
+                <div class="catchme-action-row">
+                    <button id="catchme-activity" class="catchme-circle-btn" type="button">Run<small>Mode</small></button>
+                    <button id="catchme-start-run" class="catchme-circle-btn primary" type="button">Start<small>Track</small></button>
+                    <button id="catchme-profile" class="catchme-circle-btn color-circle" type="button">Profile<small>Color</small></button>
+                </div>
+                <div id="catchme-profile-sheet" class="catchme-sheet" style="display:none;">
+                    <label>Username <input id="catchme-username" type="text" placeholder="Runner name"></label>
+                    <label>Color <input id="catchme-color" type="color" value="#f43f5e"></label>
+                    <div id="catchme-saved-areas" class="catchme-saved-areas"></div>
+                </div>
+            </div>
+        </div>
+
         <!-- Sudoku Game -->
         <div id="sudoku-screen" class="screen">
             <div class="game-header">
@@ -348,6 +406,9 @@
     <script src="sudoku.js"></script>
     <script src="clash.js"></script>
     <script src="papertoss.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="https://unpkg.com/@turf/turf@7.2.0/turf.min.js"></script>
+    <script src="catchme.js"></script>
     <script type="module">
       // Import the functions you need from the SDKs you need
       import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
@@ -373,6 +434,9 @@
         getDocs,
         query,
         setDoc,
+        addDoc,
+        updateDoc,
+        onSnapshot,
         deleteDoc,
         serverTimestamp,
         where,
@@ -430,6 +494,9 @@
         getDocs,
         query,
         setDoc,
+        addDoc,
+        updateDoc,
+        onSnapshot,
         deleteDoc,
         serverTimestamp,
         where,
