@@ -296,7 +296,7 @@
                 <div class="catchme-controls">
                     <button id="catchme-free" class="secondary-button" type="button">🏃 Free</button>
                     <button id="catchme-team" class="secondary-button" type="button">👥 Team</button>
-                    <label class="catchme-color-label">Color <input id="catchme-color" type="color" value="#f43f5e"></label>
+                    
                     <label class="catchme-unit-label">Distance
                         <select id="catchme-units">
                             <option value="km">Kilometers (km)</option>
@@ -312,14 +312,24 @@
                         </select>
                     </label>
                 </div>
-                <div class="catchme-run-controls">
-                    <button id="catchme-start-run" class="primary-button" type="button">▶️ Start</button>
-                    <button id="catchme-stop-run" class="secondary-button" type="button" disabled>⏹ Stop</button>
+                <div class="catchme-stats-card">
+                    <div class="catchme-stat"><strong id="catchme-runtime">00:00</strong><span>Time</span></div>
+                    <div class="catchme-stat"><strong id="catchme-distance">0.00</strong><span>Distance</span></div>
+                    <div class="catchme-stat"><strong id="catchme-speed">0.0</strong><span>Avg speed</span></div>
                 </div>
-                <p id="catchme-message" class="message">Use Start Run and physically move with GPS enabled. Close your loop to capture area.</p>
-                <div id="catchme-runtime" class="catchme-runtime">Run time: 00:00</div>
+                <p id="catchme-message" class="message">Move to start collecting GPS points and close your loop to claim area.</p>
                 <div id="catchme-progress" class="papertoss-bottom-bar">Chicago progression</div>
                 <div id="catchme-points" class="catchme-points"></div>
+                <div class="catchme-action-row">
+                    <button id="catchme-activity" class="catchme-circle-btn" type="button">🏃<small>Run</small></button>
+                    <button id="catchme-start-run" class="catchme-circle-btn primary" type="button">▶️<small>Start</small></button>
+                    <button id="catchme-profile" class="catchme-circle-btn" type="button">🎨<small>Style</small></button>
+                </div>
+                <div id="catchme-profile-sheet" class="catchme-sheet" style="display:none;">
+                    <label>Username <input id="catchme-username" type="text" placeholder="Runner name"></label>
+                    <label>Color <input id="catchme-color" type="color" value="#f43f5e"></label>
+                    <div id="catchme-saved-areas" class="catchme-saved-areas"></div>
+                </div>
             </div>
         </div>
 

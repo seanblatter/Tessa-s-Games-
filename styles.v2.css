@@ -1740,3 +1740,14 @@ body {
     text-align: center;
     color: #0f172a;
 }
+
+.catchme-stats-card { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:10px; }
+.catchme-stat { text-align:center; }
+.catchme-stat strong { display:block; font-size:1.7rem; }
+.catchme-action-row { display:flex; justify-content:space-around; gap:10px; }
+.catchme-circle-btn { width:88px; height:88px; border-radius:50%; border:1px solid #cbd5e1; background:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:1.4rem; color:#0f172a; }
+.catchme-circle-btn small { font-size:0.8rem; margin-top:2px; }
+.catchme-circle-btn.primary { background:#fb923c; color:#fff; border-color:#f97316; }
+.catchme-circle-btn.recording { background:#ef4444; border-color:#dc2626; color:#fff; }
+.catchme-sheet { background:#fff; border:1px solid #cbd5e1; border-radius:12px; padding:10px; display:grid; gap:8px; }
+.saved-area-pill { background:#f1f5f9; border-radius:999px; padding:6px 10px; font-size:0.82rem; margin:3px 0; }
