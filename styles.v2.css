@@ -1770,3 +1770,71 @@ body {
   .catchme-circle-btn { width: 80px; height: 80px; }
   .catchme-hud-top h2 { font-size: 1.5rem; }
 }
+
+/* Catch Me minimalist map mode */
+#catchme-drawer .catchme-secondary,
+#catchme-drawer .catchme-drawer-handle,
+#catchme-drawer .catchme-hud-top {
+  display: none !important;
+}
+
+#catchme-drawer {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  max-height: none;
+}
+
+.catchme-action-row {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 18px;
+  width: min(420px, calc(100vw - 20px));
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(10px);
+  border-radius: 999px;
+  padding: 10px 14px;
+  box-shadow: 0 12px 30px rgba(15,23,42,0.22);
+}
+
+.catchme-circle-btn {
+  width: 86px;
+  height: 86px;
+  border-radius: 999px;
+  border: none;
+  background: #f8fafc;
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.catchme-circle-btn.primary {
+  background: #111827;
+  color: #fff;
+}
+
+#catchme-profile-sheet {
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  bottom: 118px;
+  background: rgba(255,255,255,0.98);
+  border-radius: 24px;
+  padding: 18px;
+  box-shadow: 0 24px 50px rgba(15,23,42,0.25);
+  border: 1px solid rgba(226,232,240,0.8);
+}
+
+#catchme-profile-sheet label {
+  display: grid;
+  gap: 6px;
+  color: #334155;
+  font-weight: 600;
+}
+
+#catchme-profile-sheet input[type="text"] {
+  border-radius: 14px;
+  border: 1px solid #dbe3ef;
+  padding: 10px 12px;
+}

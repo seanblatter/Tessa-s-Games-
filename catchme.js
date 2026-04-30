@@ -123,7 +123,7 @@
     updateStats();
     setStatsVisible(true);
     ui.startBtn.classList.add('recording');
-    ui.startBtn.innerHTML = '⏹️<small>Stop</small>';
+    ui.startBtn.innerHTML = 'Stop<small>Track</small>';
     ui.freeBtn.disabled = true;
     ui.teamBtn.disabled = true;
     ui.activityBtn.disabled = true;
@@ -146,7 +146,7 @@
     state.timer = null;
 
     ui.startBtn.classList.remove('recording');
-    ui.startBtn.innerHTML = '▶️<small>Start</small>';
+    ui.startBtn.innerHTML = 'Start<small>Track</small>';
     ui.freeBtn.disabled = false;
     ui.teamBtn.disabled = false;
     ui.activityBtn.disabled = false;
@@ -200,7 +200,7 @@
     ui.activityBtn.onclick = () => {
       if (state.runWatchId !== null) return;
       state.activity = state.activity === 'run' ? 'walk' : 'run';
-      ui.activityBtn.innerHTML = state.activity === 'run' ? '🏃<small>Run</small>' : '🚶<small>Walk</small>';
+      ui.activityBtn.innerHTML = state.activity === 'run' ? 'Run<small>Mode</small>' : 'Walk<small>Mode</small>'; 
     };
     ui.startBtn.onclick = () => state.runWatchId === null ? startRun() : stopRun(true);
     ui.profileBtn.onclick = toggleProfileSheet;
@@ -213,7 +213,7 @@
     ui.units.value = state.units;
     ui.units.onchange = (e) => { state.units = e.target.value; localStorage.setItem('catchme-distance-units', state.units); updateStats(); };
     ui.centerBtn.onclick = () => { state.followUser = true; state.map.setView(CHICAGO_CENTER, 14); };
-    ui.drawerToggle.onclick = () => ui.drawer.classList.toggle('collapsed');
+    if (ui.drawerToggle) { ui.drawerToggle.style.display = 'none'; }
 
     setStatsVisible(false);
     updateStats();
