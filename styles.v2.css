@@ -1601,11 +1601,16 @@ body {
     align-items: center;
 }
 
-#catchme-canvas {
+#catchme-map {
     width: 100%;
-    max-width: 420px;
+    height: 560px;
     border: 2px solid #cbd5e1;
     border-radius: 14px;
-    background: #f8fafc;
-    touch-action: none;
+    overflow: hidden;
+}
+
+.catchme-run-controls {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
 }

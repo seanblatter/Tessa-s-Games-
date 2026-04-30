@@ -6,6 +6,7 @@
     <title>Tessa's Games</title>
     <link rel="icon" type="image/png" sizes="512x512" href="android-chrome-512x512.png">
     <link rel="stylesheet" href="styles.v2.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
 </head>
 <body>
     <div id="app">
@@ -295,8 +296,12 @@
                     <button id="catchme-team" class="secondary-button" type="button">Team Run</button>
                     <label>Runner color <input id="catchme-color" type="color" value="#f43f5e"></label>
                 </div>
-                <canvas id="catchme-canvas" width="420" height="560" aria-label="Chicago map for Catch Me"></canvas>
-                <p id="catchme-message" class="message">Trace across neighborhoods to claim blocks. Crossing another runner steals those blocks.</p>
+                <div id="catchme-map" aria-label="Chicago map for Catch Me"></div>
+                <div class="catchme-run-controls">
+                    <button id="catchme-start-run" class="primary-button" type="button">Start Run</button>
+                    <button id="catchme-stop-run" class="secondary-button" type="button" disabled>Stop Run</button>
+                </div>
+                <p id="catchme-message" class="message">Use Start Run and physically move with GPS enabled. Close your loop to capture area.</p>
                 <div id="catchme-progress" class="papertoss-bottom-bar">Chicago progression</div>
             </div>
         </div>
@@ -374,6 +379,8 @@
     <script src="sudoku.js"></script>
     <script src="clash.js"></script>
     <script src="papertoss.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="https://unpkg.com/@turf/turf@7.2.0/turf.min.js"></script>
     <script src="catchme.js"></script>
     <script type="module">
       // Import the functions you need from the SDKs you need
