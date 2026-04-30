@@ -1614,3 +1614,12 @@ body {
     gap: 8px;
     flex-wrap: wrap;
 }
+
+.catchme-points {
+    font-size: 0.9rem;
+    color: #334155;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 10px;
+    padding: 10px 12px;
+}
