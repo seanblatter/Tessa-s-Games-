@@ -1667,3 +1667,29 @@ body {
     border-radius: 8px;
     padding: 6px;
 }
+
+.catchme-hud {
+    max-height: 48vh;
+    overflow: auto;
+    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.2);
+}
+
+.catchme-controls .secondary-button,
+.catchme-run-controls .primary-button,
+.catchme-run-controls .secondary-button {
+    min-height: 44px;
+}
+
+@media (max-width: 700px) {
+    .catchme-hud {
+        top: 8px;
+        left: 8px;
+        right: 8px;
+        max-height: 42vh;
+        padding: 8px;
+    }
+
+    .catchme-hud-top h2 {
+        font-size: 1.8rem;
+    }
+}

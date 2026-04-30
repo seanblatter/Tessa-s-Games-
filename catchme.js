@@ -1,65 +1,59 @@
 (function () {
     const CHICAGO_CENTER = [41.8781, -87.6298];
     const CHICAGO_NEIGHBORHOODS_GEOJSON = 'https://raw.githubusercontent.com/blackmad/neighborhoods/master/chicago.geojson';
-    const TEAM_KEY = 'catchme-team-runs-v3';
-    const FREE_KEY = 'catchme-free-runs-v3';
+    const TEAM_KEY = 'catchme-team-runs-v4';
+    const FREE_KEY = 'catchme-free-runs-v4';
+    const MAP_STYLE_KEY = 'catchme-map-style';
+    const MAX_ACCEPTABLE_ACCURACY_METERS = 20;
+    const MAX_RUN_SPEED_MPS = 8.5;
+
+    const MAP_STYLES = {
+        streets: { label: 'Streets', url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', attr: '&copy; OpenStreetMap contributors' },
+        outdoors: { label: 'Outdoors', url: 'https://tile.thunderforest.com/outdoors/{z}/{x}/{y}.png?apikey=8f4c3d5b111c4e2ab0d0c61b6d4f17c5', attr: '&copy; Thunderforest, OSM' },
+        light: { label: 'Light', url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', attr: '&copy; CARTO, OSM' },
+        dark: { label: 'Dark', url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', attr: '&copy; CARTO, OSM' }
+    };
 
     const state = {
-        mode: 'free',
-        color: '#f43f5e',
-        map: null,
-        neighborhoodsLayer: null,
-        claimsLayer: null,
-        liveLayer: null,
-        runnerLine: null,
-        runWatchId: null,
-        runPath: [],
-        freeClaims: [],
-        teamClaims: [],
-        cityUnion: null,
-        cityArea: 0,
-        unsubscribeClaims: null,
-        unsubscribePresence: null,
-        liveMarkers: new Map(),
-        distanceUnits: localStorage.getItem('catchme-distance-units') || 'km'
+        mode: 'free', color: '#f43f5e', map: null, currentTileLayer: null, neighborhoodsLayer: null,
+        claimsLayer: null, liveLayer: null, runnerLine: null, runWatchId: null, runPath: [], runSamples: [],
+        freeClaims: [], teamClaims: [], cityUnion: null, cityArea: 0, unsubscribeClaims: null,
+        unsubscribePresence: null, liveMarkers: new Map(), distanceUnits: localStorage.getItem('catchme-distance-units') || 'km',
+        mapStyle: localStorage.getItem(MAP_STYLE_KEY) || 'streets', totalDistanceKm: 0, lastAccepted: null
     };
     const ui = {};
+    const fbReady = () => !!(window.firebaseServices && window.currentUser);
+    const uid = () => window.currentUser?.uid || 'guest';
 
-    function firebaseReady() {
-        return !!(window.firebaseServices && window.currentUser);
-    }
-    function userId() { return window.currentUser?.uid || 'guest'; }
+    const toArea = (m2) => state.distanceUnits === 'mi' ? `${(m2 / 2589988.110336).toFixed(2)} mi²` : `${(m2 / 1000000).toFixed(2)} km²`;
+    const toDist = (km) => state.distanceUnits === 'mi' ? `${(km * 0.621371).toFixed(2)} mi` : `${km.toFixed(2)} km`;
+    const setMessage = (m) => { ui.message.textContent = m; };
 
     function loadClaims() {
         try { state.freeClaims = JSON.parse(localStorage.getItem(FREE_KEY) || '[]'); } catch { state.freeClaims = []; }
         try { state.teamClaims = JSON.parse(localStorage.getItem(TEAM_KEY) || '[]'); } catch { state.teamClaims = []; }
     }
     function saveClaims() {
-        localStorage.setItem(FREE_KEY, JSON.stringify(state.freeClaims.slice(-500)));
-        localStorage.setItem(TEAM_KEY, JSON.stringify(state.teamClaims.slice(-1500)));
+        localStorage.setItem(FREE_KEY, JSON.stringify(state.freeClaims.slice(-800)));
+        localStorage.setItem(TEAM_KEY, JSON.stringify(state.teamClaims.slice(-2000)));
     }
-    function getClaims() { return state.mode === 'free' ? state.freeClaims : state.teamClaims; }
-    function setMessage(text) { ui.message.textContent = text; }
+    const claims = () => state.mode === 'free' ? state.freeClaims : state.teamClaims;
 
-
-    function formatArea(m2) {
-        if (state.distanceUnits === 'mi') return `${(m2 / 2589988.110336).toFixed(2)} mi²`;
-        return `${(m2 / 1000000).toFixed(2)} km²`;
-    }
-
-    function formatDistanceKm(km) {
-        return state.distanceUnits === 'mi' ? `${(km * 0.621371).toFixed(2)} mi` : `${km.toFixed(2)} km`;
+    function setMapStyle(styleKey) {
+        const style = MAP_STYLES[styleKey] || MAP_STYLES.streets;
+        state.mapStyle = styleKey;
+        localStorage.setItem(MAP_STYLE_KEY, styleKey);
+        if (state.currentTileLayer) state.map.removeLayer(state.currentTileLayer);
+        state.currentTileLayer = L.tileLayer(style.url, { maxZoom: 20, attribution: style.attr });
+        state.currentTileLayer.addTo(state.map);
     }
 
-    function explainPoints(claimArea, stolenArea) {
-        const claimPoints = Math.max(10, Math.round(claimArea / 500));
-        const stealPoints = Math.round(stolenArea / 350);
-        return claimPoints + stealPoints;
+    function pointsFormula(claimArea, stolenArea) {
+        return Math.max(10, Math.round(claimArea / 500)) + Math.round(stolenArea / 350);
     }
-
     function updatePointExplanation(lastPoints = null) {
-        const prefix = lastPoints === null ? '' : `Last capture: ${lastPoints} pts. `;
-        ui.points.textContent = `${prefix}Points: 1 point / 500m² captured + 1 bonus point / 350m² stolen. Area and distance shown in ${state.distanceUnits === 'mi' ? 'miles' : 'kilometers'}.`;
+        const p = lastPoints === null ? '' : `Last capture: ${lastPoints} pts. `;
+        ui.points.textContent = `${p}Points = 1 per 500m² captured + 1 bonus per 350m² stolen. GPS only (no manual drawing).`;
     }
 
     function setMode(mode) {
@@ -70,185 +64,165 @@
         updateProgress();
     }
 
-    function randomNeighborhoodColor(name) {
-        let h = 0; for (let i = 0; i < name.length; i += 1) h = (h * 31 + name.charCodeAt(i)) % 360;
-        return `hsl(${h}, 56%, 76%)`;
-    }
-
     async function loadNeighborhoods() {
         const res = await fetch(CHICAGO_NEIGHBORHOODS_GEOJSON);
         const geo = await res.json();
         state.neighborhoodsLayer = L.geoJSON(geo, {
-            style: (feature) => ({ fillColor: randomNeighborhoodColor(feature.properties?.name || 'Area'), fillOpacity: 0.5, color: '#334155', weight: 1 }),
-            onEachFeature: (feature, layer) => layer.bindTooltip(feature.properties?.name || 'Neighborhood', { sticky: true })
+            style: (f) => ({ fillColor: `hsl(${((f.properties?.name || '').length * 47) % 360},56%,76%)`, fillOpacity: 0.4, color: '#334155', weight: 1 }),
+            onEachFeature: (f, layer) => layer.bindTooltip(f.properties?.name || 'Neighborhood', { sticky: true })
         }).addTo(state.map);
         let union = null;
-        for (const f of geo.features) {
-            try { union = union ? turf.union(turf.featureCollection([union, f])) : f; } catch {}
-        }
-        state.cityUnion = union;
-        state.cityArea = union ? turf.area(union) : 1;
-        state.map.fitBounds(state.neighborhoodsLayer.getBounds(), { padding: [15, 15] });
+        for (const f of geo.features) { try { union = union ? turf.union(turf.featureCollection([union, f])) : f; } catch {} }
+        state.cityUnion = union; state.cityArea = union ? turf.area(union) : 1;
+        state.map.fitBounds(state.neighborhoodsLayer.getBounds(), { padding: [12, 12] });
     }
 
     function renderClaims() {
         state.claimsLayer.clearLayers();
-        getClaims().forEach((claim) => {
-            L.geoJSON(claim.geojson, {
-                style: { fillColor: claim.color, fillOpacity: claim.owner === userId() ? 0.55 : 0.3, color: claim.color, weight: 2 }
-            }).bindPopup(`${claim.ownerName || 'Runner'} · ${formatArea(claim.area)} · ${claim.points || 0} pts`).addTo(state.claimsLayer);
-        });
+        claims().forEach((c) => L.geoJSON(c.geojson, { style: { fillColor: c.color, fillOpacity: c.owner === uid() ? 0.58 : 0.3, color: c.color, weight: 2 } })
+            .bindPopup(`<strong>${c.name || 'Unnamed Capture'}</strong><br>${c.ownerName || 'Runner'} · ${toArea(c.area)} · ${c.points || 0} pts`).addTo(state.claimsLayer));
     }
 
     function updateProgress() {
-        const claims = getClaims();
-        const totalCoverage = claims.reduce((sum, c) => sum + (c.area || 0), 0);
-        const myCoverage = claims.filter((c) => c.owner === userId()).reduce((sum, c) => sum + (c.area || 0), 0);
-        ui.progress.textContent = `Chicago progression · ${state.mode === 'free' ? 'Free' : 'Team'} total ${Math.min(100, Math.round((totalCoverage / state.cityArea) * 100))}% · You ${Math.min(100, Math.round((myCoverage / state.cityArea) * 100))}%`;
+        const all = claims();
+        const total = all.reduce((s, c) => s + (c.area || 0), 0);
+        const mine = all.filter((c) => c.owner === uid()).reduce((s, c) => s + (c.area || 0), 0);
+        ui.progress.textContent = `Chicago progression · ${state.mode === 'free' ? 'Free' : 'Team'} ${Math.min(100, (total / state.cityArea) * 100).toFixed(2)}% · You ${Math.min(100, (mine / state.cityArea) * 100).toFixed(2)}%`;
     }
 
-    function closeEnough(a, b) { return turf.distance(turf.point(a), turf.point(b), { units: 'kilometers' }) <= 0.07; }
+    function closeEnough(a, b) { return turf.distance(turf.point(a), turf.point(b), { units: 'kilometers' }) <= 0.05; }
     function buildClosedPolygon(path) {
-        if (path.length < 6 || !closeEnough(path[0], path[path.length - 1])) return null;
+        if (path.length < 7 || !closeEnough(path[0], path[path.length - 1])) return null;
         const poly = turf.polygon([[...path, path[0]]]);
         return turf.area(poly) < 2500 ? null : poly;
     }
-    function clipToChicago(poly) {
-        try { return turf.intersect(turf.featureCollection([state.cityUnion, poly])); } catch { return null; }
+    function clipToChicago(poly) { try { return turf.intersect(turf.featureCollection([state.cityUnion, poly])); } catch { return null; } }
+
+    function shouldAcceptSample(last, curr) {
+        if (curr.accuracy > MAX_ACCEPTABLE_ACCURACY_METERS) return { ok: false, reason: `GPS ±${curr.accuracy.toFixed(2)}m too noisy` };
+        if (!last) return { ok: true, km: 0 };
+        const km = turf.distance(turf.point(last.point), turf.point(curr.point), { units: 'kilometers' });
+        const dt = Math.max(1, (curr.ts - last.ts) / 1000);
+        const mps = (km * 1000) / dt;
+        if (mps > MAX_RUN_SPEED_MPS) return { ok: false, reason: 'GPS jump filtered' };
+        if (km < 0.002) return { ok: false, reason: 'Micro-jitter filtered' };
+        return { ok: true, km };
     }
 
-    async function publishPresence(point, isRunning) {
-        if (!firebaseReady()) return;
+    async function publishPresence(sample, running) {
+        if (!fbReady()) return;
         const fb = window.firebaseServices;
-        const ref = fb.doc(fb.db, 'catchmePresence', userId());
-        await fb.setDoc(ref, {
-            uid: userId(),
-            name: window.currentUser.displayName || 'Runner',
-            mode: state.mode,
-            color: state.color,
-            running: isRunning,
-            lat: point ? point[1] : null,
-            lon: point ? point[0] : null,
+        await fb.setDoc(fb.doc(fb.db, 'catchmePresence', uid()), {
+            uid: uid(), name: window.currentUser.displayName || 'Runner', mode: state.mode, color: state.color, running,
+            lat: sample ? sample.point[1] : null, lon: sample ? sample.point[0] : null, accuracy: sample?.accuracy || null,
             updatedAt: fb.serverTimestamp()
         }, { merge: true });
     }
 
-    async function saveClaimToDb(claim) {
-        if (!firebaseReady()) return;
+    async function saveClaim(claim) {
+        if (!fbReady()) return;
         const fb = window.firebaseServices;
         await fb.addDoc(fb.collection(fb.db, 'catchmeClaims'), claim);
     }
 
-    async function applyCapture(clipped) {
-        const claims = getClaims();
+    async function finalizeCapture(clipped) {
+        const captureName = (window.prompt('Name this capture area:', `Run ${new Date().toLocaleTimeString()}`) || '').trim() || 'Unnamed Capture';
         const next = [];
         let stolenArea = 0;
-        for (const claim of claims) {
-            if (claim.owner === userId()) { next.push(claim); continue; }
+        for (const c of claims()) {
+            if (c.owner === uid()) { next.push(c); continue; }
             try {
-                const overlap = turf.intersect(turf.featureCollection([claim.geojson, clipped]));
-                if (overlap) {
-                    stolenArea += turf.area(overlap);
-                    const remaining = turf.difference(turf.featureCollection([claim.geojson, clipped]));
-                    if (remaining) next.push({ ...claim, geojson: remaining, area: turf.area(remaining) });
-                } else next.push(claim);
-            } catch { next.push(claim); }
+                const overlap = turf.intersect(turf.featureCollection([c.geojson, clipped]));
+                if (!overlap) { next.push(c); continue; }
+                stolenArea += turf.area(overlap);
+                const remaining = turf.difference(turf.featureCollection([c.geojson, clipped]));
+                if (remaining) next.push({ ...c, geojson: remaining, area: turf.area(remaining) });
+            } catch { next.push(c); }
         }
-        const points = explainPoints(turf.area(clipped), stolenArea);
-        const newClaim = {
-            id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
-            owner: userId(), ownerName: window.currentUser?.displayName || 'Runner',
-            color: state.color, mode: state.mode, geojson: clipped, area: turf.area(clipped),
-            stolenArea, points, createdAt: new Date().toISOString()
-        };
+        const area = turf.area(clipped);
+        const points = pointsFormula(area, stolenArea);
+        const newClaim = { id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`, name: captureName, owner: uid(), ownerName: window.currentUser?.displayName || 'Runner', color: state.color, mode: state.mode, geojson: clipped, area, stolenArea, points, createdAt: new Date().toISOString() };
         next.push(newClaim);
         if (state.mode === 'free') state.freeClaims = next; else state.teamClaims = next;
         saveClaims();
-        await saveClaimToDb(newClaim);
+        await saveClaim(newClaim);
         updatePointExplanation(points);
     }
 
     async function onPosition(pos) {
-        const point = [pos.coords.longitude, pos.coords.latitude];
-        state.runPath.push(point);
+        const sample = { point: [pos.coords.longitude, pos.coords.latitude], accuracy: pos.coords.accuracy || 999, ts: pos.timestamp || Date.now() };
+        const gate = shouldAcceptSample(state.lastAccepted, sample);
+        if (!gate.ok) { setMessage(`Tracking... ${gate.reason}. Keep moving in open sky.`); return; }
+
+        state.lastAccepted = sample;
+        state.runSamples.push(sample);
+        state.runPath.push(sample.point);
+        state.totalDistanceKm += gate.km || 0;
         state.runnerLine.setLatLngs(state.runPath.map((p) => [p[1], p[0]]));
-        await publishPresence(point, true);
+        await publishPresence(sample, true);
 
         const candidate = buildClosedPolygon(state.runPath);
-        if (!candidate) { const dist = turf.length(turf.lineString(state.runPath), { units: 'kilometers' });
-            setMessage(`Tracking run... ${state.runPath.length} GPS points · ${formatDistanceKm(dist)} traveled.`); return; }
+        if (!candidate) {
+            setMessage(`Tracking run · ${state.runPath.length} accepted pts · ${toDist(state.totalDistanceKm)} · accuracy ±${sample.accuracy.toFixed(2)}m`);
+            return;
+        }
         const clipped = clipToChicago(candidate);
-        if (!clipped || turf.area(clipped) < 2500) { setMessage('Loop closed but no valid Chicago area captured.'); stopRun(false); return; }
+        if (!clipped || turf.area(clipped) < 2500) { setMessage('Loop closed but did not capture a valid Chicago area.'); stopRun(false); return; }
 
-        await applyCapture(clipped);
+        await finalizeCapture(clipped);
         renderClaims();
         updateProgress();
-        setMessage(`Loop complete. Area filled and saved. Captured ${formatArea(turf.area(clipped))}.`);
+        setMessage(`Loop complete and saved: ${toArea(turf.area(clipped))}.`);
         stopRun(false);
     }
-    function onPositionError(err) { setMessage(`GPS error (${err.code}). Enable precise location.`); stopRun(false); }
+
+    function onPositionError(err) { setMessage(`GPS error (${err.code}). Enable precise location + disable battery saver.`); stopRun(false); }
 
     function startRun() {
         if (!navigator.geolocation || state.runWatchId !== null) return;
-        state.runPath = []; state.runnerLine.setLatLngs([]);
-        state.runWatchId = navigator.geolocation.watchPosition(onPosition, onPositionError, { enableHighAccuracy: true, maximumAge: 1000, timeout: 12000 });
+        state.runPath = []; state.runSamples = []; state.totalDistanceKm = 0; state.lastAccepted = null; state.runnerLine.setLatLngs([]);
+        state.runWatchId = navigator.geolocation.watchPosition(onPosition, onPositionError, { enableHighAccuracy: true, maximumAge: 0, timeout: 8000 });
         ui.startRunBtn.disabled = true; ui.stopRunBtn.disabled = false;
-        setMessage('Run started. Physically run and close your loop to fill an area.');
+        setMessage('Run started. For best precision: wait for stable GPS, keep open sky view, and avoid tunnels.');
     }
+
     function stopRun(showMsg = true) {
         if (state.runWatchId !== null) navigator.geolocation.clearWatch(state.runWatchId);
-        state.runWatchId = null;
-        publishPresence(null, false);
+        state.runWatchId = null; publishPresence(null, false);
         ui.startRunBtn.disabled = false; ui.stopRunBtn.disabled = true;
-        state.runPath = []; state.runnerLine.setLatLngs([]);
+        state.runPath = []; state.runSamples = []; state.totalDistanceKm = 0; state.lastAccepted = null; state.runnerLine.setLatLngs([]);
         if (showMsg) setMessage('Run stopped.');
     }
 
-    function renderPresenceDoc(docData) {
-        if (!docData || docData.uid === userId() || !docData.running || !docData.lat || !docData.lon) return;
-        let marker = state.liveMarkers.get(docData.uid);
-        const ll = [docData.lat, docData.lon];
-        if (!marker) {
-            marker = L.circleMarker(ll, { radius: 7, color: docData.color || '#0ea5e9', fillOpacity: 0.9 }).addTo(state.liveLayer);
-            state.liveMarkers.set(docData.uid, marker);
-        } else marker.setLatLng(ll);
-        marker.bindTooltip(`${docData.name || 'Runner'} (${docData.mode})`, { permanent: false });
-    }
-
-    function subscribeLiveData() {
-        if (!firebaseReady()) return;
+    function subscribeLive() {
+        if (!fbReady()) return;
         const fb = window.firebaseServices;
-        if (state.unsubscribeClaims) state.unsubscribeClaims();
-        if (state.unsubscribePresence) state.unsubscribePresence();
-
+        state.unsubscribeClaims?.(); state.unsubscribePresence?.();
         state.unsubscribeClaims = fb.onSnapshot(fb.collection(fb.db, 'catchmeClaims'), (snap) => {
-            const team = [];
-            snap.forEach((d) => {
-                const data = d.data();
-                if (data.mode === 'team') team.push(data);
-            });
-            state.teamClaims = team;
-            saveClaims();
-            if (state.mode === 'team') { renderClaims(); updateProgress(); }
+            const team = []; snap.forEach((d) => { const data = d.data(); if (data.mode === 'team') team.push(data); });
+            state.teamClaims = team; saveClaims(); if (state.mode === 'team') { renderClaims(); updateProgress(); }
         });
-
         state.unsubscribePresence = fb.onSnapshot(fb.collection(fb.db, 'catchmePresence'), (snap) => {
             state.liveLayer.clearLayers();
-            state.liveMarkers.clear();
-            snap.forEach((d) => renderPresenceDoc(d.data()));
+            snap.forEach((d) => {
+                const r = d.data();
+                if (!r || r.uid === uid() || !r.running || !r.lat || !r.lon) return;
+                L.circleMarker([r.lat, r.lon], { radius: 6, color: r.color || '#0ea5e9', fillOpacity: 0.9 }).bindTooltip(`${r.name || 'Runner'} · ±${(r.accuracy || 0).toFixed(1)}m`).addTo(state.liveLayer);
+            });
         });
     }
 
     async function bootstrap() {
         if (state.map) return;
         ui.freeBtn = document.getElementById('catchme-free'); ui.teamBtn = document.getElementById('catchme-team');
-        ui.colorInput = document.getElementById('catchme-color'); ui.message = document.getElementById('catchme-message');
+        ui.colorInput = document.getElementById('catchme-color'); ui.units = document.getElementById('catchme-units');
+        ui.style = document.getElementById('catchme-style'); ui.message = document.getElementById('catchme-message');
         ui.progress = document.getElementById('catchme-progress'); ui.points = document.getElementById('catchme-points');
         ui.startRunBtn = document.getElementById('catchme-start-run'); ui.stopRunBtn = document.getElementById('catchme-stop-run');
-        ui.units = document.getElementById('catchme-units');
 
-        state.map = L.map('catchme-map', { zoomControl: true }).setView(CHICAGO_CENTER, 11);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap contributors' }).addTo(state.map);
+        state.map = L.map('catchme-map', { zoomControl: false }).setView(CHICAGO_CENTER, 12);
+        L.control.zoom({ position: 'bottomright' }).addTo(state.map);
+        setMapStyle(state.mapStyle);
         state.claimsLayer = L.layerGroup().addTo(state.map);
         state.liveLayer = L.layerGroup().addTo(state.map);
         state.runnerLine = L.polyline([], { color: state.color, weight: 4 }).addTo(state.map);
@@ -258,20 +232,15 @@
         ui.colorInput.oninput = (e) => { state.color = e.target.value; state.runnerLine.setStyle({ color: state.color }); };
         ui.units.value = state.distanceUnits;
         ui.units.onchange = (e) => { state.distanceUnits = e.target.value; localStorage.setItem('catchme-distance-units', state.distanceUnits); renderClaims(); updateProgress(); updatePointExplanation(); };
+        ui.style.value = state.mapStyle;
+        ui.style.onchange = (e) => setMapStyle(e.target.value);
         ui.startRunBtn.onclick = startRun; ui.stopRunBtn.onclick = () => stopRun(true);
-        subscribeLiveData();
-        setMode('free');
+        subscribeLive(); setMode('free');
     }
 
     window.initCatchMe = async function initCatchMe(reset = false) {
         await bootstrap();
-        if (reset) {
-            stopRun(false); state.freeClaims = []; state.teamClaims = []; saveClaims(); renderClaims(); updateProgress();
-            if (firebaseReady()) {
-                const fb = window.firebaseServices;
-                await fb.setDoc(fb.doc(fb.db, 'catchmePresence', userId()), { running: false, updatedAt: fb.serverTimestamp() }, { merge: true });
-            }
-        }
-        setTimeout(() => state.map?.invalidateSize(), 80);
+        if (reset) { stopRun(false); state.freeClaims = []; state.teamClaims = []; saveClaims(); renderClaims(); updateProgress(); }
+        setTimeout(() => state.map?.invalidateSize(), 100);
     };
 })();
