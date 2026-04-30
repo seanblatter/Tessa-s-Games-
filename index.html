@@ -284,19 +284,25 @@
 
 
         <!-- Catch Me Game -->
-        <div id="catchme-screen" class="screen">
-            <div class="game-header">
-                <button class="back-button" onclick="showMenu()">← Back</button>
-                <h2>Catch Me · Chicago</h2>
-                <button class="new-game-button" onclick="initCatchMe(true)">Reset</button>
-            </div>
-            <div class="panel catchme-panel">
+        <div id="catchme-screen" class="screen catchme-fullscreen">
+            <div id="catchme-map" aria-label="Chicago map for Catch Me"></div>
+            <div class="catchme-hud" role="region" aria-label="Catch Me controls">
+                <div class="catchme-hud-top">
+                    <button class="back-button" onclick="showMenu()">← Games</button>
+                    <h2>Catch Me · Chicago</h2>
+                    <button class="new-game-button" onclick="initCatchMe(true)">Reset Map</button>
+                </div>
                 <div class="catchme-controls">
                     <button id="catchme-free" class="secondary-button" type="button">Free Run</button>
                     <button id="catchme-team" class="secondary-button" type="button">Team Run</button>
-                    <label>Runner color <input id="catchme-color" type="color" value="#f43f5e"></label>
+                    <label class="catchme-color-label">Color <input id="catchme-color" type="color" value="#f43f5e"></label>
+                    <label class="catchme-unit-label">Distance
+                        <select id="catchme-units">
+                            <option value="km">Kilometers (km)</option>
+                            <option value="mi">Miles (mi)</option>
+                        </select>
+                    </label>
                 </div>
-                <div id="catchme-map" aria-label="Chicago map for Catch Me"></div>
                 <div class="catchme-run-controls">
                     <button id="catchme-start-run" class="primary-button" type="button">Start Run</button>
                     <button id="catchme-stop-run" class="secondary-button" type="button" disabled>Stop Run</button>

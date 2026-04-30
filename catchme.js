@@ -20,7 +20,8 @@
         cityArea: 0,
         unsubscribeClaims: null,
         unsubscribePresence: null,
-        liveMarkers: new Map()
+        liveMarkers: new Map(),
+        distanceUnits: localStorage.getItem('catchme-distance-units') || 'km'
     };
     const ui = {};
 
@@ -40,6 +41,16 @@
     function getClaims() { return state.mode === 'free' ? state.freeClaims : state.teamClaims; }
     function setMessage(text) { ui.message.textContent = text; }
 
+
+    function formatArea(m2) {
+        if (state.distanceUnits === 'mi') return `${(m2 / 2589988.110336).toFixed(2)} mi²`;
+        return `${(m2 / 1000000).toFixed(2)} km²`;
+    }
+
+    function formatDistanceKm(km) {
+        return state.distanceUnits === 'mi' ? `${(km * 0.621371).toFixed(2)} mi` : `${km.toFixed(2)} km`;
+    }
+
     function explainPoints(claimArea, stolenArea) {
         const claimPoints = Math.max(10, Math.round(claimArea / 500));
         const stealPoints = Math.round(stolenArea / 350);
@@ -48,7 +59,7 @@
 
     function updatePointExplanation(lastPoints = null) {
         const prefix = lastPoints === null ? '' : `Last capture: ${lastPoints} pts. `;
-        ui.points.textContent = `${prefix}Points: 1 point / 500m² captured + 1 bonus point / 350m² stolen from others.`;
+        ui.points.textContent = `${prefix}Points: 1 point / 500m² captured + 1 bonus point / 350m² stolen. Area and distance shown in ${state.distanceUnits === 'mi' ? 'miles' : 'kilometers'}.`;
     }
 
     function setMode(mode) {
@@ -85,7 +96,7 @@
         getClaims().forEach((claim) => {
             L.geoJSON(claim.geojson, {
                 style: { fillColor: claim.color, fillOpacity: claim.owner === userId() ? 0.55 : 0.3, color: claim.color, weight: 2 }
-            }).bindPopup(`${claim.ownerName || 'Runner'} · ${(claim.area / 1000000).toFixed(2)} km² · ${claim.points || 0} pts`).addTo(state.claimsLayer);
+            }).bindPopup(`${claim.ownerName || 'Runner'} · ${formatArea(claim.area)} · ${claim.points || 0} pts`).addTo(state.claimsLayer);
         });
     }
 
@@ -164,14 +175,15 @@
         await publishPresence(point, true);
 
         const candidate = buildClosedPolygon(state.runPath);
-        if (!candidate) { setMessage(`Tracking run... ${state.runPath.length} GPS points captured.`); return; }
+        if (!candidate) { const dist = turf.length(turf.lineString(state.runPath), { units: 'kilometers' });
+            setMessage(`Tracking run... ${state.runPath.length} GPS points · ${formatDistanceKm(dist)} traveled.`); return; }
         const clipped = clipToChicago(candidate);
         if (!clipped || turf.area(clipped) < 2500) { setMessage('Loop closed but no valid Chicago area captured.'); stopRun(false); return; }
 
         await applyCapture(clipped);
         renderClaims();
         updateProgress();
-        setMessage(`Loop complete. Area filled and saved. Captured ${(turf.area(clipped) / 1000000).toFixed(2)} km².`);
+        setMessage(`Loop complete. Area filled and saved. Captured ${formatArea(turf.area(clipped))}.`);
         stopRun(false);
     }
     function onPositionError(err) { setMessage(`GPS error (${err.code}). Enable precise location.`); stopRun(false); }
@@ -233,6 +245,7 @@
         ui.colorInput = document.getElementById('catchme-color'); ui.message = document.getElementById('catchme-message');
         ui.progress = document.getElementById('catchme-progress'); ui.points = document.getElementById('catchme-points');
         ui.startRunBtn = document.getElementById('catchme-start-run'); ui.stopRunBtn = document.getElementById('catchme-stop-run');
+        ui.units = document.getElementById('catchme-units');
 
         state.map = L.map('catchme-map', { zoomControl: true }).setView(CHICAGO_CENTER, 11);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap contributors' }).addTo(state.map);
@@ -243,6 +256,8 @@
         loadClaims(); await loadNeighborhoods(); renderClaims(); updateProgress(); updatePointExplanation();
         ui.freeBtn.onclick = () => setMode('free'); ui.teamBtn.onclick = () => setMode('team');
         ui.colorInput.oninput = (e) => { state.color = e.target.value; state.runnerLine.setStyle({ color: state.color }); };
+        ui.units.value = state.distanceUnits;
+        ui.units.onchange = (e) => { state.distanceUnits = e.target.value; localStorage.setItem('catchme-distance-units', state.distanceUnits); renderClaims(); updateProgress(); updatePointExplanation(); };
         ui.startRunBtn.onclick = startRun; ui.stopRunBtn.onclick = () => stopRun(true);
         subscribeLiveData();
         setMode('free');
