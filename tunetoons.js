@@ -8,31 +8,31 @@ Tune Toons Game Card
 
 const TUNE_TOONS_QUESTIONS = [
   {
-    image: 'Desktop/untitled folder 2/Phineas.jpg',
+    image: 'untitled%20folder%202/Phineas.jpg',
     question: "What is the color of Phineas's hair?",
     answer: { r: 218, g: 71, b: 44 },
     feature: 'hair',
   },
   {
-    image: 'Desktop/untitled folder 2/Garfield.jpg',
+    image: 'untitled%20folder%202/Garfield.jpg',
     question: "What is the color of Garfield's fur?",
     answer: { r: 240, g: 174, b: 66 },
     feature: 'fur',
   },
   {
-    image: 'Desktop/untitled folder 2/Jerry.jpg',
+    image: 'untitled%20folder%202/Jerry.jpg',
     question: "What is the color of Jerry's fur?",
     answer: { r: 198, g: 139, b: 51 },
     feature: 'fur',
   },
   {
-    image: 'Desktop/untitled folder 2/PinkPanther.jpg',
+    image: 'untitled%20folder%202/PinkPanther.jpg',
     question: "What is the color of Pink Panther's fur?",
     answer: { r: 232, g: 158, b: 187 },
     feature: 'fur',
   },
   {
-    image: 'Desktop/untitled folder 2/Bart.png',
+    image: 'untitled%20folder%202/Bart.png',
     question: "What is the color of Bart's skin?",
     answer: { r: 248, g: 218, b: 76 },
     feature: 'skin',
@@ -105,6 +105,12 @@ function renderTuneToonsCard(container, questionObj) {
   pickerCol.className = 'ref-picker-col';
   let userColor = { r: 218, g: 71, b: 44 };
   let userHSV = { h: 0, s: 81, v: 70 };
+  // Large preview
+  const previewBox = document.createElement('div');
+  previewBox.className = 'color-preview-large ref-preview-large';
+  const previewLabel = document.createElement('div');
+  previewLabel.className = 'color-preview-label ref-preview-label';
+  // Color Picker
   const colorPicker = createColorPicker((color, hsv) => {
     userColor = color;
     userHSV = hsv;
@@ -112,11 +118,6 @@ function renderTuneToonsCard(container, questionObj) {
     previewLabel.textContent = `R${color.r}, G${color.g}, B${color.b}`;
   });
   pickerCol.appendChild(colorPicker);
-  // Large preview
-  const previewBox = document.createElement('div');
-  previewBox.className = 'color-preview-large ref-preview-large';
-  const previewLabel = document.createElement('div');
-  previewLabel.className = 'color-preview-label ref-preview-label';
   pickerCol.appendChild(previewBox);
   pickerCol.appendChild(previewLabel);
   row.appendChild(pickerCol);
