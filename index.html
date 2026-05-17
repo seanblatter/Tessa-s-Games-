@@ -7,6 +7,10 @@
     <link rel="icon" type="image/png" sizes="512x512" href="android-chrome-512x512.png">
     <link rel="stylesheet" href="styles.v2.css">
     <link rel="stylesheet" href="tunetoons.css">
+    <link rel="stylesheet" href="tunetoons.modern.css">
+    <link rel="stylesheet" href="tunetoons.ref.css">
+    <script src="referenceColorPicker.js"></script>
+    <script src="modernColorPicker.js"></script>
 </head>
 <body>
     <div id="app">
@@ -123,7 +127,21 @@
                     <span class="game-name">Paper Toss Office</span>
                     <span class="game-desc">Curve paper through the office fan and sink it in the bin</span>
                 </button>
+                <button class="game-button tunetoons-card" onclick="showGame('tunetoons')">
+                    <span class="game-icon">🎨</span>
+                    <span class="game-name">Tune Toons</span>
+                    <span class="game-desc">Guess the cartoon color!</span>
+                </button>
             </div>
+                <!-- Tune Toons Game -->
+                <div id="tunetoons-screen" class="screen">
+                    <div class="game-header">
+                        <button class="back-button" onclick="showMenu()">← Back</button>
+                        <h2>Tune Toons</h2>
+                        <button class="new-game-button" onclick="initTuneToons()">New Game</button>
+                    </div>
+                    <div id="tunetoons-game"></div>
+                </div>
         </div>
 
         <!-- Profile Screen -->

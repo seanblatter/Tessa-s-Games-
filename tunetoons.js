@@ -8,31 +8,31 @@ Tune Toons Game Card
 
 const TUNE_TOONS_QUESTIONS = [
   {
-    image: 'untitled folder 2/Phineas.jpg',
+    image: 'Desktop/untitled folder 2/Phineas.jpg',
     question: "What is the color of Phineas's hair?",
     answer: { r: 218, g: 71, b: 44 },
     feature: 'hair',
   },
   {
-    image: 'untitled folder 2/Garfield.jpg',
+    image: 'Desktop/untitled folder 2/Garfield.jpg',
     question: "What is the color of Garfield's fur?",
     answer: { r: 240, g: 174, b: 66 },
     feature: 'fur',
   },
   {
-    image: 'untitled folder 2/Jerry.jpg',
+    image: 'Desktop/untitled folder 2/Jerry.jpg',
     question: "What is the color of Jerry's fur?",
     answer: { r: 198, g: 139, b: 51 },
     feature: 'fur',
   },
   {
-    image: 'untitled folder 2/PinkPanther.jpg',
+    image: 'Desktop/untitled folder 2/PinkPanther.jpg',
     question: "What is the color of Pink Panther's fur?",
     answer: { r: 232, g: 158, b: 187 },
     feature: 'fur',
   },
   {
-    image: 'untitled folder 2/Bart.png',
+    image: 'Desktop/untitled folder 2/Bart.png',
     question: "What is the color of Bart's skin?",
     answer: { r: 248, g: 218, b: 76 },
     feature: 'skin',
@@ -65,122 +65,150 @@ function getScore(distance) {
   return Math.max(0, 10 - (distance / 441.67) * 10).toFixed(2);
 }
 
+
 function createColorPicker(onPick) {
-  // Simple RGB sliders
-  const container = document.createElement('div');
-  container.className = 'color-picker';
-  const sliders = ['r', 'g', 'b'].map(channel => {
-    const label = document.createElement('label');
-    label.textContent = channel.toUpperCase();
-    const input = document.createElement('input');
-    input.type = 'range';
-    input.min = 0;
-    input.max = 255;
-    input.value = 128;
-    input.className = 'color-slider';
-    label.appendChild(input);
-    container.appendChild(label);
-    return input;
+  // Use ReferenceColorPicker (vertical hue slider, large color block, brightness slider)
+  const picker = new window.ReferenceColorPicker({
+    onPick: (rgb, hsv) => onPick(rgb, hsv),
+    initial: { h: 0, s: 81, v: 70 }
   });
-  const preview = document.createElement('div');
-  preview.className = 'color-preview';
-  container.appendChild(preview);
-  function updatePreview() {
-    const color = {
-      r: parseInt(sliders[0].value),
-      g: parseInt(sliders[1].value),
-      b: parseInt(sliders[2].value),
-    };
-    preview.style.background = rgbToHex(color);
-    onPick(color);
-  }
-  sliders.forEach(slider => slider.addEventListener('input', updatePreview));
-  updatePreview();
-  return container;
+  return picker.container;
 }
 
 function renderTuneToonsCard(container, questionObj) {
   container.innerHTML = '';
   const card = document.createElement('div');
-  card.className = 'tune-toons-card';
+  card.className = 'tune-toons-card tune-toons-guess-state ref-two-col';
 
-  // Question
-  const q = document.createElement('h2');
-  q.textContent = questionObj.question;
-  card.appendChild(q);
+  // Top: Question
+  const header = document.createElement('div');
+  header.className = 'tune-toons-header ref-header';
+  header.innerHTML = `<span class=\"tune-toons-q\">What is the color of <b>${questionObj.feature}</b>?</span>`;
+  card.appendChild(header);
 
-  // Image
+  // Two-column layout
+  const row = document.createElement('div');
+  row.className = 'ref-row';
+
+  // Left: Image
+  const imgCol = document.createElement('div');
+  imgCol.className = 'ref-img-col';
   const img = document.createElement('img');
   img.src = questionObj.image;
   img.alt = questionObj.feature;
-  img.className = 'tune-toons-image';
-  card.appendChild(img);
+  img.className = 'tune-toons-image ref-img';
+  imgCol.appendChild(img);
+  row.appendChild(imgCol);
 
-  // Color Picker
-  let userColor = { r: 128, g: 128, b: 128 };
-  const colorPicker = createColorPicker(color => {
+  // Right: Color Picker
+  const pickerCol = document.createElement('div');
+  pickerCol.className = 'ref-picker-col';
+  let userColor = { r: 218, g: 71, b: 44 };
+  let userHSV = { h: 0, s: 81, v: 70 };
+  const colorPicker = createColorPicker((color, hsv) => {
     userColor = color;
+    userHSV = hsv;
+    previewBox.style.background = rgbToHex(color);
+    previewLabel.textContent = `R${color.r}, G${color.g}, B${color.b}`;
   });
-  card.appendChild(colorPicker);
+  pickerCol.appendChild(colorPicker);
+  // Large preview
+  const previewBox = document.createElement('div');
+  previewBox.className = 'color-preview-large ref-preview-large';
+  const previewLabel = document.createElement('div');
+  previewLabel.className = 'color-preview-label ref-preview-label';
+  pickerCol.appendChild(previewBox);
+  pickerCol.appendChild(previewLabel);
+  row.appendChild(pickerCol);
+
+  card.appendChild(row);
 
   // Submit Button
   const submit = document.createElement('button');
-  submit.textContent = 'Guess!';
-  submit.className = 'tune-toons-submit';
+  submit.textContent = '✓';
+  submit.className = 'tune-toons-submit ref-submit';
   submit.onclick = () => {
-    renderTuneToonsResult(container, questionObj, userColor);
+    renderTuneToonsResult(container, questionObj, userColor, userHSV);
   };
   card.appendChild(submit);
 
   container.appendChild(card);
 }
 
-function renderTuneToonsResult(container, questionObj, userColor) {
+function renderTuneToonsResult(container, questionObj, userColor, userHSV) {
   container.innerHTML = '';
   const card = document.createElement('div');
-  card.className = 'tune-toons-card';
+  card.className = 'tune-toons-card tune-toons-result-state ref-two-col';
 
-  // Image
+  // Top: Question
+  const header = document.createElement('div');
+  header.className = 'tune-toons-header ref-header';
+  header.innerHTML = `<span class=\"tune-toons-q\">What is the color of <b>${questionObj.feature}</b>?</span>`;
+  card.appendChild(header);
+
+  // Two-column layout for result
+  const row = document.createElement('div');
+  row.className = 'ref-row';
+
+  // Left: Image
+  const imgCol = document.createElement('div');
+  imgCol.className = 'ref-img-col';
   const img = document.createElement('img');
   img.src = questionObj.image;
   img.alt = questionObj.feature;
-  img.className = 'tune-toons-image';
-  card.appendChild(img);
+  img.className = 'tune-toons-image ref-img';
+  imgCol.appendChild(img);
+  row.appendChild(imgCol);
 
-  // Results
-  const result = document.createElement('div');
-  result.className = 'tune-toons-result';
-  const userColorBox = document.createElement('div');
-  userColorBox.className = 'color-box';
-  userColorBox.style.background = rgbToHex(userColor);
-  userColorBox.title = `Your Guess: R${userColor.r},G${userColor.g},B${userColor.b}`;
-  const answerColorBox = document.createElement('div');
-  answerColorBox.className = 'color-box';
-  answerColorBox.style.background = rgbToHex(questionObj.answer);
-  answerColorBox.title = `Correct: R${questionObj.answer.r},G${questionObj.answer.g},B${questionObj.answer.b}`;
-  result.appendChild(userColorBox);
-  result.appendChild(answerColorBox);
-
+  // Right: Color feedback
+  const pickerCol = document.createElement('div');
+  pickerCol.className = 'ref-picker-col';
+  // User color
+  const userCol = document.createElement('div');
+  userCol.className = 'color-box-large ref-result-color';
+  userCol.style.background = rgbToHex(userColor);
+  userCol.title = `Your Guess: R${userColor.r},G${userColor.g},B${userColor.b}`;
+  // Correct color
+  const answerCol = document.createElement('div');
+  answerCol.className = 'color-box-large ref-result-color';
+  answerCol.style.background = rgbToHex(questionObj.answer);
+  answerCol.title = `Correct: R${questionObj.answer.r},G${questionObj.answer.g},B${questionObj.answer.b}`;
+  // Label rows
+  const labelRow = document.createElement('div');
+  labelRow.className = 'ref-label-row';
+  labelRow.innerHTML = `<span class='ref-label'>Your Selection</span><span class='ref-label'>Original</span>`;
+  // Color row
+  const colorRow = document.createElement('div');
+  colorRow.className = 'ref-color-row';
+  colorRow.appendChild(userCol);
+  colorRow.appendChild(answerCol);
+  pickerCol.appendChild(labelRow);
+  pickerCol.appendChild(colorRow);
   // Score
   const distance = colorDistance(userColor, questionObj.answer);
   const score = getScore(distance);
   const scoreText = document.createElement('div');
-  scoreText.className = 'tune-toons-score';
-  scoreText.innerHTML = `<b>Score:</b> ${score}/10`;
-  result.appendChild(scoreText);
-
-  // Show RGB values
+  scoreText.className = 'tune-toons-score ref-score';
+  scoreText.innerHTML = `${score}`;
+  pickerCol.appendChild(scoreText);
+  // Feedback
+  const feedback = document.createElement('div');
+  feedback.className = 'ref-feedback';
+  feedback.textContent = score >= 9 ? 'Perfect!' : score >= 7 ? 'Great job!' : 'Keep practicing!';
+  pickerCol.appendChild(feedback);
+  // RGB values
   const rgbText = document.createElement('div');
-  rgbText.className = 'tune-toons-rgb';
-  rgbText.innerHTML = `<b>Your Guess:</b> R${userColor.r},G${userColor.g},B${userColor.b}<br><b>Correct:</b> R${questionObj.answer.r},G${questionObj.answer.g},B${questionObj.answer.b}`;
-  result.appendChild(rgbText);
+  rgbText.className = 'tune-toons-rgb ref-rgb';
+  rgbText.innerHTML = `<b>H${Math.round(userHSV.h)} S${Math.round(userHSV.s)} B${Math.round(userHSV.v)}</b><br><b>H0 S81 B70</b>`;
+  pickerCol.appendChild(rgbText);
+  row.appendChild(pickerCol);
 
-  card.appendChild(result);
+  card.appendChild(row);
 
   // Next button
   const next = document.createElement('button');
-  next.textContent = 'Next';
-  next.className = 'tune-toons-next';
+  next.textContent = '→';
+  next.className = 'tune-toons-next ref-next';
   next.onclick = () => {
     startTuneToonsGame(container);
   };

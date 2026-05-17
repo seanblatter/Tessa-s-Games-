@@ -1,0 +1,133 @@
+/*
+  Tune Toons Modern Styles
+  - Visually matches reference images
+  - Modern color picker, large color blocks, clean layout
+*/
+
+.tune-toons-card {
+  background: #fff;
+  border-radius: 32px;
+  box-shadow: 0 6px 32px rgba(0,0,0,0.10);
+  padding: 40px 32px 32px 32px;
+  margin: 40px auto;
+  max-width: 540px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+  transition: box-shadow 0.2s;
+}
+.tune-toons-header {
+  font-size: 1.5em;
+  font-weight: 700;
+  color: #4a3aff;
+  margin-bottom: 18px;
+  text-align: center;
+}
+.tune-toons-q {
+  font-size: 1.2em;
+  color: #222;
+}
+.tune-toons-image {
+  width: 240px;
+  height: 240px;
+  object-fit: contain;
+  border-radius: 18px;
+  margin-bottom: 24px;
+  background: #f3f3f3;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+}
+.tune-toons-preview-row {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin: 18px 0 8px 0;
+}
+.color-preview-large {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  border: 2px solid #bbb;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+.color-preview-label {
+  font-size: 1.1em;
+  color: #444;
+  font-weight: 500;
+  margin-left: 8px;
+}
+.tune-toons-submit, .tune-toons-next {
+  margin-top: 22px;
+  padding: 14px 38px;
+  border-radius: 10px;
+  border: none;
+  background: #4a3aff;
+  color: #fff;
+  font-size: 1.2em;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s;
+  box-shadow: 0 2px 8px rgba(74,58,255,0.08);
+}
+.tune-toons-submit:hover, .tune-toons-next:hover {
+  background: #2d1fd8;
+}
+.tune-toons-result-row {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  margin: 18px 0 8px 0;
+  justify-content: center;
+}
+.color-box-large {
+  width: 80px;
+  height: 80px;
+  border-radius: 18px;
+  border: 2.5px solid #bbb;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+}
+.tune-toons-score {
+  font-size: 2.2em;
+  font-weight: 800;
+  color: #e23d3d;
+  margin: 12px 0 8px 0;
+  text-align: center;
+}
+.tune-toons-rgb {
+  font-size: 1.1em;
+  color: #444;
+  margin-bottom: 8px;
+  text-align: center;
+}
+/* Modern Color Picker */
+.modern-color-picker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.color-canvas {
+  border-radius: 12px;
+  border: 2px solid #bbb;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  cursor: crosshair;
+  margin-bottom: 8px;
+}
+.color-brightness-slider {
+  width: 220px;
+  margin-bottom: 4px;
+}
+
+@media (max-width: 600px) {
+  .tune-toons-card {
+    max-width: 98vw;
+    padding: 18px 2vw 18px 2vw;
+  }
+  .tune-toons-image {
+    width: 98vw;
+    height: 38vw;
+    max-width: 98vw;
+    max-height: 38vw;
+  }
+}

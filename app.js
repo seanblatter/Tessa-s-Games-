@@ -171,7 +171,20 @@ function showGame(gameName) {
         case 'papertoss':
             initPaperToss();
             break;
+        case 'tunetoons':
+            initTuneToons();
+            break;
     }
+// Tune Toons game init stub
+function initTuneToons() {
+    const container = document.getElementById('tunetoons-game');
+    if (container) {
+        container.innerHTML = '';
+        if (typeof startTuneToonsGame === 'function') {
+            startTuneToonsGame(container);
+        }
+    }
+}
 }
 
 function hideAllScreens() {
