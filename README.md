@@ -22,6 +22,15 @@ A beautiful, mobile-friendly web application featuring three classic games custo
 - Auto-check support and keyboard navigation
 - 10 refreshed puzzle boards
 
+
+### Clash (Browser RTS Arena)
+- Fixed 3-minute matches for every arena
+- Real-time lane-based battle inspired by Clash gameplay
+- Playable against adaptive bots across 3 distinct levels/themes
+- 6 character classes (Knight, Archer, Giant, Wizard, Healer, Bomber)
+- Tower combat, projectiles, elixir economy, and tactical card deck controls
+- Vertical in-browser arena with tap-to-deploy controls, route-based troop movement, tower HP, crown scoring, and live elixir HUD for both sides
+
 ## 🚀 Getting Started
 
 ```bash

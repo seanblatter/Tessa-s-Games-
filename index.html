@@ -113,6 +113,16 @@
                     <span class="game-name">Sudoku</span>
                     <span class="game-desc">Classic 9x9 number puzzle</span>
                 </button>
+                <button class="game-button clash-card" onclick="showGame('clash')">
+                    <span class="game-icon">⚔️</span>
+                    <span class="game-name">Clash</span>
+                    <span class="game-desc">Launch the real-time Pygame bot arena</span>
+                </button>
+                <button class="game-button toss-card" onclick="showGame('papertoss')">
+                    <span class="game-icon">🗑️</span>
+                    <span class="game-name">Paper Toss Office</span>
+                    <span class="game-desc">Curve paper through the office fan and sink it in the bin</span>
+                </button>
             </div>
         </div>
 
@@ -165,7 +175,7 @@
             </div>
             <div class="panel">
                 <h3>Your friend tag</h3>
-                <p>Share this tag to invite friends.</p>
+                <p>Tag your friend.</p>
                 <div class="invite-row">
                     <input type="text" id="friend-tag" readonly>
                     <button class="secondary-button" onclick="copyFriendTag()">Copy</button>
@@ -173,7 +183,7 @@
             </div>
             <div class="panel">
                 <h3>Accept an invite</h3>
-                <p>Paste a friend tag to connect with them.</p>
+                <p>Tag your friend back.</p>
                 <div class="invite-row">
                     <input type="text" id="invite-code" placeholder="🥬123456789">
                     <button class="primary-button" onclick="acceptInvite()">Send Request</button>
@@ -208,6 +218,72 @@
             </div>
         </div>
 
+
+        <!-- Clash Game -->
+        <div id="clash-screen" class="screen">
+            <div class="game-header">
+                <button class="back-button" onclick="showMenu()">← Back</button>
+                <h2>Clash</h2>
+                <button class="new-game-button" onclick="initClash(true)">New Match</button>
+            </div>
+            <div id="clash-game" class="panel clash-panel">
+                <div class="clash-topbar">
+                    <div>
+                        <strong id="clash-status">Level 1 · Emerald Keep</strong>
+                        <p id="clash-substatus">Capture more crowns before time ends.</p>
+                    </div>
+                    <div class="clash-time-pill" id="clash-timer">3:00</div>
+                </div>
+
+                <div class="clash-scoreband" aria-label="Live score">
+                    <div class="clash-team enemy">
+                        <span class="label">Bot</span>
+                        <span id="clash-bot-elixir">Elixir 5.0</span>
+                    </div>
+                    <div class="clash-crowns" id="clash-score">👑 0 : 0 👑</div>
+                    <div class="clash-team player">
+                        <span class="label">You</span>
+                        <span id="clash-player-elixir">Elixir 5.0</span>
+                    </div>
+                </div>
+
+                <canvas id="clash-canvas" width="380" height="560" aria-label="Clash battle arena"></canvas>
+
+                <div class="clash-controls">
+                    <div class="clash-card-row" role="group" aria-label="Choose troop">
+                        <button class="control-button active" data-clash-card="knight">⚔️ 3</button>
+                        <button class="control-button" data-clash-card="archer">🏹 3</button>
+                        <button class="control-button" data-clash-card="giant">🛡️ 5</button>
+                        <button class="control-button" data-clash-card="wizard">🧙 4</button>
+                        <button class="control-button" data-clash-card="bomber">💣 3</button>
+                        <button class="control-button" data-clash-card="healer">💚 4</button>
+                    </div>
+                    <div class="clash-action-row" role="group" aria-label="Arena controls">
+                        <span class="clash-inline-elixir" id="clash-player-elixir-inline">Elixir 5.0</span>
+                        <button id="clash-restart" class="secondary-button">Restart</button>
+                        <button id="clash-next-level" class="secondary-button">Next Arena</button>
+                    </div>
+                </div>
+                <p id="clash-message" class="message">Tap a troop card, then tap anywhere on your side of the arena (below the river) to deploy.</p>
+            </div>
+        </div>
+
+        <!-- Paper Toss Game -->
+        <div id="papertoss-screen" class="screen">
+            <div class="game-header papertoss-header">
+                <button class="back-button" onclick="showMenu()">← Back</button>
+                <h2>Paper Toss Office</h2>
+                <button class="new-game-button" id="papertoss-reset">Reset</button>
+            </div>
+            <div class="panel papertoss-panel">
+                <canvas id="papertoss-canvas" width="420" height="560" aria-label="Paper Toss office arena"></canvas>
+                <p id="papertoss-message" class="message">Tap or swipe upward to throw. Adjust for the fan.</p>
+                <div id="papertoss-stats" class="papertoss-bottom-bar">Score 0 · Shots 12 · Wind +0.0</div>
+                <div id="papertoss-skins" class="papertoss-skins" aria-label="Paper ball skins"></div>
+                <button id="papertoss-play-again" class="primary-button" style="display:none; width:100%; margin-top:10px;">Play Again</button>
+            </div>
+        </div>
+
         <!-- Sudoku Game -->
         <div id="sudoku-screen" class="screen">
             <div class="game-header">
@@ -226,6 +302,13 @@
                 <div id="sudoku-controls">
                     <div id="number-pad"></div>
                     <button class="control-button" onclick="clearSudokuCell()">Clear</button>
+                </div>
+                <div class="sudoku-footer">
+                    <div class="sudoku-history-track" id="sudoku-history-circles" aria-label="Sudoku game history"></div>
+                    <div class="sudoku-game-meta">
+                        <span id="sudoku-game-status">Game 1</span>
+                        <span id="sudoku-game-number">#1</span>
+                    </div>
                 </div>
                 <div id="sudoku-message" class="message"></div>
             </div>
@@ -272,6 +355,8 @@
     <script src="wordle.js"></script>
     <script src="spellingbee.js"></script>
     <script src="sudoku.js"></script>
+    <script src="clash.js"></script>
+    <script src="papertoss.js"></script>
     <script type="module">
       // Import the functions you need from the SDKs you need
       import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
