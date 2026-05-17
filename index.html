@@ -6,6 +6,7 @@
     <title>Tessa's Games</title>
     <link rel="icon" type="image/png" sizes="512x512" href="android-chrome-512x512.png">
     <link rel="stylesheet" href="styles.v2.css">
+    <link rel="stylesheet" href="tunetoons.css">
 </head>
 <body>
     <div id="app">
@@ -92,7 +93,7 @@
                     </div>
                 </div>
             </div>
-            <div class="header">
+                    <div id="tunetoons-card-container"></div>
                 <h1>💝 Tessa's Games 💝</h1>
                 <p class="subtitle">Choose your game</p>
             </div>
@@ -193,6 +194,14 @@
                 <button class="new-game-button" data-game="wordle" onclick="newWordleGame()">New Game</button>
             </div>
             <div id="wordle-game">
+            <script src="tunetoons.js"></script>
+            <script>
+                // Start Tune Toons game on page load
+                document.addEventListener('DOMContentLoaded', function() {
+                    const container = document.getElementById('tunetoons-card-container');
+                    if (container) startTuneToonsGame(container);
+                });
+            </script>
                 <div id="wordle-board"></div>
                 <div id="wordle-keyboard"></div>
                 <div id="wordle-message" class="message"></div>
