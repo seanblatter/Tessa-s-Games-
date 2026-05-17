@@ -7,41 +7,6 @@ Tune Toons Game Card
 */
 
 const TUNE_TOONS_QUESTIONS = [
-  {
-    image: 'images/Phineas.jpg',
-    question: "What is the color of Phineas's hair?",
-    answer: { r: 218, g: 71, b: 44 },
-    feature: "Phineas's hair",
-    colorPrompt: 'hair color',
-  },
-  {
-    image: 'images/Garfield.jpg',
-    question: "What is the color of Garfield?",
-    answer: { r: 240, g: 174, b: 66 },
-    feature: 'Garfield',
-    colorPrompt: 'color',
-  },
-  {
-    image: 'images/Jerry.jpg',
-    question: "What is the color of Jerry?",
-    answer: { r: 198, g: 139, b: 51 },
-    feature: 'Jerry',
-    colorPrompt: 'color',
-  },
-  {
-    image: 'images/PinkPanther.jpg',
-    question: "What is the color of Pink Panther?",
-    answer: { r: 232, g: 158, b: 187 },
-    feature: 'Pink Panther',
-    colorPrompt: 'color',
-  },
-  {
-    image: 'images/Bart.png',
-    question: "What is the color of Bart's skin?",
-    answer: { r: 248, g: 218, b: 76 },
-    feature: "Bart's skin",
-    colorPrompt: 'skin color',
-  },
 ];
   {
     image: 'images/Phineas.jpg',
