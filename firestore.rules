@@ -68,5 +68,40 @@ service cloud.firestore {
         && request.resource.data.uid == request.auth.uid;
       allow delete: if false;
     }
+
+    match /chatMessages/{messageId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn()
+        && request.resource.data.keys().hasOnly(['uid', 'displayName', 'body', 'createdAt'])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.body is string;
+      allow update, delete: if false;
+    }
+
+    match /mailMessages/{messageId} {
+      allow create: if isSignedIn()
+        && request.resource.data.keys().hasOnly([
+          'fromUid',
+          'fromDisplayName',
+          'fromEmailLower',
+          'toEmailLower',
+          'toEmail',
+          'subject',
+          'body',
+          'createdAt'
+        ])
+        && request.resource.data.fromUid == request.auth.uid
+        && request.resource.data.subject is string
+        && request.resource.data.body is string
+        && request.resource.data.toEmailLower is string;
+      allow read: if isSignedIn()
+        && (
+          resource.data.fromUid == request.auth.uid
+          || (request.auth.token.email != null
+              && (resource.data.toEmail == request.auth.token.email
+                  || resource.data.toEmailLower == request.auth.token.email))
+        );
+      allow update, delete: if false;
+    }
   }
 }
