@@ -20,10 +20,11 @@ service cloud.firestore {
         'attempts',
         'durationSeconds',
         'wordlePattern',
+        'wordsFound',
         'updatedAt'
       ])
       && request.resource.data.uid == request.auth.uid
-      && request.resource.data.game in ['wordle', 'sudoku', 'crossword']
+      && request.resource.data.game in ['wordle', 'spellingbee', 'sudoku', 'crossword']
       && request.resource.data.score is number
       && request.resource.data.date is string;
     }
